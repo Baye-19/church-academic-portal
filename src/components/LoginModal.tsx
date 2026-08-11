@@ -33,8 +33,8 @@ export const LoginModal: React.FC = () => {
   };
 
   return (
-    <div className="h-screen max-h-screen bg-[#180B05] flex flex-col justify-between relative overflow-y-auto overflow-x-hidden">
-      <div className="flex-1 flex items-center justify-center p-4 relative my-auto">
+    <div className="min-h-screen bg-[#180B05] flex flex-col justify-between relative overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 relative">
         {/* Warm Background Glows */}
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#F5A623]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#E5921A]/10 rounded-full blur-3xl pointer-events-none" />

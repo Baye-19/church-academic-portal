@@ -3,7 +3,7 @@ import { Phone, Mail, Code } from 'lucide-react';
 
 export const DeveloperBanner: React.FC = () => {
   return (
-    <footer className="w-full bg-[#120803] border-t border-[#4A2715] px-4 py-2.5 text-[11px] text-[#CBB39C] mt-8 shrink-0">
+    <footer className="w-full bg-[#120803] border-t border-[#4A2715] px-4 py-3 text-[11px] text-[#CBB39C] shrink-0 mt-auto">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 text-center sm:text-left">
         {/* Developer Title */}
         <div className="flex items-center gap-1.5 text-[#F5A623] font-bold text-[11px]">
