@@ -20,7 +20,6 @@ import {
   X,
 } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
-import { ChurchLogo } from './ChurchLogo';
 
 interface SidebarProps {
   activeTab: string;
@@ -67,15 +66,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const sidebarContent = (
     <div className="flex flex-col h-full text-[#F7E5C8] overflow-hidden">
       <div className="p-4 space-y-1 overflow-y-auto flex-1 min-h-0">
-        {/* Sidebar Brand Header */}
-        <div className="p-3 mb-2 bg-[#27140B] border border-[#522B17] rounded-xl flex items-center gap-3">
-          <ChurchLogo size="md" />
-          <div className="overflow-hidden">
-            <h2 className="font-bold text-xs text-white truncate">{t('shortName')}</h2>
-            <p className="text-[10px] text-[#F5A623] truncate">{t('departmentName')}</p>
-          </div>
-        </div>
-
         <div className="flex items-center justify-between px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#A68F7B]">
           <span>Navigation Menu</span>
           {onCloseMobile && (
