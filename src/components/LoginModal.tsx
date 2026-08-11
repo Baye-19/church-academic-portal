@@ -114,7 +114,7 @@ export const LoginModal: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. teacher1@amras.edu"
+                placeholder="e.g. ash@admin.edu"
                 className="w-full px-3.5 py-2.5 bg-[#180B05] border border-[#5C321B] rounded-xl text-white placeholder-[#A68F7B] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
               />
             </div>
@@ -142,60 +142,6 @@ export const LoginModal: React.FC = () => {
               <span>{submitting ? 'Authenticating...' : t('loginBtn')}</span>
             </button>
           </form>
-
-          {/* Quick Demo Accounts Panel */}
-          <div className="mt-8 pt-6 border-t border-[#4A2715]">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#F5A623] mb-3">
-              <Key className="w-3.5 h-3.5 text-[#F5A623]" />
-              <span>{t('demoLogins')}</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => handleDemoClick('ADMIN')}
-                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
-              >
-                <div className="font-bold text-white flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#F5A623]" />
-                  <span>Admin</span>
-                </div>
-                <div className="text-[10px] text-[#CBB39C] truncate">admin@amras.edu</div>
-              </button>
-
-              <button
-                onClick={() => handleDemoClick('DEPT_HEAD')}
-                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
-              >
-                <div className="font-bold text-white flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Dept Head</span>
-                </div>
-                <div className="text-[10px] text-[#CBB39C] truncate">head@amras.edu</div>
-              </button>
-
-              <button
-                onClick={() => handleDemoClick('TEACHER')}
-                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
-              >
-                <div className="font-bold text-white flex items-center gap-1">
-                  <BookOpen className="w-3.5 h-3.5 text-[#F5A623]" />
-                  <span>Teacher</span>
-                </div>
-                <div className="text-[10px] text-[#CBB39C] truncate">teacher1@amras.edu</div>
-              </button>
-
-              <button
-                onClick={() => handleDemoClick('COORDINATOR')}
-                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
-              >
-                <div className="font-bold text-white flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Coordinator</span>
-                </div>
-                <div className="text-[10px] text-[#CBB39C] truncate">coordinator@amras.edu</div>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
