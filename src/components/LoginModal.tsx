@@ -1,0 +1,207 @@
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { UserRole } from '../types';
+import { ShieldCheck, UserCheck, BookOpen, Key, Globe, Lock } from 'lucide-react';
+import { ChurchLogo } from './ChurchLogo';
+import { DeveloperBanner } from './DeveloperBanner';
+
+export const LoginModal: React.FC = () => {
+  const { login, switchDemoUser } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    const result = await login(email, password);
+    setSubmitting(false);
+    if (!result.success) {
+      setError(result.message || 'Login failed');
+    }
+  };
+
+  const handleDemoClick = async (role: UserRole) => {
+    setError('');
+    setSubmitting(true);
+    await switchDemoUser(role);
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="h-screen max-h-screen bg-[#180B05] flex flex-col justify-between relative overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 relative my-auto">
+        {/* Warm Background Glows */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#F5A623]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#E5921A]/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-4xl grid md:grid-cols-5 bg-[#27140B] border border-[#522B17] rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl z-10">
+        {/* Left Branding Panel */}
+        <div className="md:col-span-2 bg-[#180B05] p-8 flex flex-col justify-between text-[#F7E5C8] border-r border-[#4A2715]">
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <ChurchLogo size="lg" />
+              <div>
+                <h1 className="text-lg font-bold tracking-tight text-white font-serif">{t('shortName')}</h1>
+                <p className="text-xs text-[#F5A623] font-semibold">Academic Portal v2.4</p>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-bold leading-snug mb-3 text-white">
+              {t('appName')}
+            </h2>
+            <p className="text-xs text-[#CBB39C] leading-relaxed mb-6">
+              {t('departmentName')}
+            </p>
+
+            <div className="space-y-3 pt-4 border-t border-[#4A2715] text-xs text-[#CBB39C]">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#F5A623]" />
+                <span>Role-Based Teacher & Admin Permissions</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#F5A623]" />
+                <span>8 Sunday School Academic Classes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-[#F5A623]" />
+                <span>Bilingual System (English / አማርኛ)</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-[#4A2715] text-[11px] text-[#A68F7B] flex items-center justify-between">
+            <span>Status: <span className="text-[#F5A623] font-bold">Active</span></span>
+            <span>2025/2026 E.C.</span>
+          </div>
+        </div>
+
+        {/* Right Form Panel */}
+        <div className="md:col-span-3 p-8 flex flex-col justify-center bg-[#27140B]">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-white">{t('loginTitle')}</h3>
+              <p className="text-xs text-[#CBB39C] mt-1">{t('loginSubtitle')}</p>
+            </div>
+
+            {/* Language Switcher */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#180B05] hover:bg-[#351C0F] text-xs text-[#F7E5C8] border border-[#522B17] font-medium transition"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#F5A623]" />
+              <span>{language === 'en' ? 'አማርኛ' : 'English'}</span>
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-semibold text-[#CBB39C] mb-1">
+                {t('emailOrUsername')}
+              </label>
+              <input
+                type="text"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. teacher1@amras.edu"
+                className="w-full px-3.5 py-2.5 bg-[#180B05] border border-[#5C321B] rounded-xl text-white placeholder-[#A68F7B] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#CBB39C] mb-1">
+                {t('password')}
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-3.5 py-2.5 bg-[#180B05] border border-[#5C321B] rounded-xl text-white placeholder-[#A68F7B] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-2.5 px-4 bg-[#E5921A] hover:bg-[#FBB03B] font-bold text-[#1E0C04] text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4" />
+              <span>{submitting ? 'Authenticating...' : t('loginBtn')}</span>
+            </button>
+          </form>
+
+          {/* Quick Demo Accounts Panel */}
+          <div className="mt-8 pt-6 border-t border-[#4A2715]">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#F5A623] mb-3">
+              <Key className="w-3.5 h-3.5 text-[#F5A623]" />
+              <span>{t('demoLogins')}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleDemoClick('ADMIN')}
+                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
+              >
+                <div className="font-bold text-white flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span>Admin</span>
+                </div>
+                <div className="text-[10px] text-[#CBB39C] truncate">admin@amras.edu</div>
+              </button>
+
+              <button
+                onClick={() => handleDemoClick('DEPT_HEAD')}
+                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
+              >
+                <div className="font-bold text-white flex items-center gap-1">
+                  <UserCheck className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Dept Head</span>
+                </div>
+                <div className="text-[10px] text-[#CBB39C] truncate">head@amras.edu</div>
+              </button>
+
+              <button
+                onClick={() => handleDemoClick('TEACHER')}
+                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
+              >
+                <div className="font-bold text-white flex items-center gap-1">
+                  <BookOpen className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span>Teacher</span>
+                </div>
+                <div className="text-[10px] text-[#CBB39C] truncate">teacher1@amras.edu</div>
+              </button>
+
+              <button
+                onClick={() => handleDemoClick('COORDINATOR')}
+                className="p-2.5 bg-[#180B05] hover:bg-[#351C0F] border border-[#5C321B] rounded-xl text-left transition text-xs"
+              >
+                <div className="font-bold text-white flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Coordinator</span>
+                </div>
+                <div className="text-[10px] text-[#CBB39C] truncate">coordinator@amras.edu</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Bottom Developer Credits Footer */}
+    <DeveloperBanner />
+  </div>
+);
+};

@@ -1,0 +1,6 @@
+{
+  "name": "ሐይመተ አብርሃም ሰ/ት/ቤት Academic Portal",
+  "description": "Bilingual (English/Amharic) Academic Management System with Course, Mark Entry, Result Analysis, Teacher, Coordinator, and Schedule Management",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
