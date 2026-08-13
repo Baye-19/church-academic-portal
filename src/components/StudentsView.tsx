@@ -57,12 +57,24 @@ export const StudentsView: React.FC = () => {
     const clsObj = classes.find((c) => c.id === formData.classId);
     const payload = {
       ...formData,
+      email: formData.email || `student_${Date.now()}@school.internal`,
       className: clsObj ? clsObj.name : 'Class 1',
     };
 
     const res = await api.createStudent(payload);
     if (res.success) {
       setShowAddModal(false);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        amharicName: '',
+        gender: 'Male' as any,
+        email: '',
+        phone: '',
+        classId: 'cls-1',
+        section: 'A',
+        academicYear: getCurrentAcademicYear(),
+      });
       loadData();
     }
   };
@@ -293,29 +305,16 @@ export const StudentsView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 mb-1">{t('email')}</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="student@amras.edu"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 mb-1">{t('phone')}</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+251 922 000000"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-300 mb-1">{t('phone')}</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+251 922 000000"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white"
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">

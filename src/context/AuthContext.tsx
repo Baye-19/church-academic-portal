@@ -38,11 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password?: string) => {
     try {
       const res = await api.login(email, password);
-      if (res.success && res.user) {
-        setUser(res.user);
-        setToken(res.token);
-        sessionStorage.setItem('amras_token', res.token);
-        sessionStorage.setItem('amras_user', JSON.stringify(res.user));
+      const authenticatedUser = res.user || res.data?.user;
+      const authToken = res.token || res.data?.token || 'mock-token';
+
+      if (res.success && authenticatedUser) {
+        setUser(authenticatedUser);
+        setToken(authToken);
+        sessionStorage.setItem('amras_token', authToken);
+        sessionStorage.setItem('amras_user', JSON.stringify(authenticatedUser));
         return { success: true };
       }
       return { success: false, message: res.message || 'Authentication failed' };

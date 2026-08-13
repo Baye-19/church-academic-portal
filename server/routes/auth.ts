@@ -57,6 +57,8 @@ router.post('/login', async (req: Request, res: Response) => {
 
   res.json({
     success: true,
+    user,
+    token: `mock-jwt-token-${user.id}`,
     data: {
       user,
       token: `mock-jwt-token-${user.id}`,

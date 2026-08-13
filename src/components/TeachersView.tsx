@@ -40,9 +40,22 @@ export const TeachersView: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await api.createUser(formData);
+    const payload = {
+      ...formData,
+      employeeId: formData.employeeId || `TCH-${Math.floor(300 + Math.random() * 600)}`,
+    };
+    const res = await api.createUser(payload);
     if (res.success) {
       setShowAddModal(false);
+      setFormData({
+        name: '',
+        amharicName: '',
+        email: '',
+        phone: '',
+        employeeId: '',
+        role: 'TEACHER' as any,
+        department: 'Computer Science',
+      });
       loadData();
     }
   };
@@ -57,7 +70,7 @@ export const TeachersView: React.FC = () => {
             <span>{t('teachers')} & Coordinators Roster</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Faculty member accounts, departmental roles, employee IDs, and status management.
+            Faculty member accounts, departmental roles, contact details, and status management.
           </p>
         </div>
 
@@ -94,9 +107,11 @@ export const TeachersView: React.FC = () => {
           <div key={tch.id} className="p-5 bg-slate-850 border border-slate-800 rounded-2xl shadow-xl flex flex-col justify-between space-y-4">
             <div>
               <div className="flex justify-between items-start">
-                <span className="px-2.5 py-1 bg-slate-900 text-slate-300 border border-slate-700 text-[11px] font-mono font-bold rounded-lg">
-                  {tch.employeeId}
-                </span>
+                {tch.employeeId ? (
+                  <span className="px-2.5 py-1 bg-slate-900 text-slate-300 border border-slate-700 text-[11px] font-mono font-bold rounded-lg">
+                    {tch.employeeId}
+                  </span>
+                ) : <div />}
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                   tch.role === 'COORDINATOR' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                 }`}>
@@ -161,29 +176,16 @@ export const TeachersView: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 mb-1">{t('employeeId')}</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.employeeId}
-                    onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                    placeholder="TCH-305"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 mb-1">{t('role')}</label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white"
-                  >
-                    <option value="TEACHER">TEACHER</option>
-                    <option value="COORDINATOR">COORDINATOR</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-slate-300 mb-1">{t('role')}</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white"
+                >
+                  <option value="TEACHER">TEACHER</option>
+                  <option value="COORDINATOR">COORDINATOR</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

@@ -53,7 +53,7 @@ export const translations = {
     // Auth
     loginTitle: 'Academic Management System',
     loginSubtitle: 'Sign in to access your academic dashboard',
-    emailOrUsername: 'Email / Employee ID',
+    emailOrUsername: 'Email',
     password: 'Password',
     loginBtn: 'Sign In',
     demoLogins: 'Quick Demo Accounts (Click to Auto-fill)',
@@ -96,7 +96,7 @@ export const translations = {
     addNewCourse: 'Add New Course',
 
     // Teachers & Coordinators
-    employeeId: 'Employee ID',
+    employeeId: 'ID Code',
     fullName: 'Full Name',
     amharicName: 'Amharic Name',
     phone: 'Phone Number',
@@ -219,7 +219,7 @@ export const translations = {
     // Auth
     loginTitle: 'የትምህርት ክፍል አስተዳደር ሥርዓት',
     loginSubtitle: 'ወደ ዳሽቦርድዎ ለመግባት መለያዎን ያስገቡ',
-    emailOrUsername: 'ኢሜይል / የሰራተኛ መታወቂያ',
+    emailOrUsername: 'ኢሜይል',
     password: 'የይለፍ ቃል',
     loginBtn: 'ግቡ',
     demoLogins: 'የሙከራ መለያዎች (ለመሙላት ይጫኑ)',
@@ -262,7 +262,7 @@ export const translations = {
     addNewCourse: 'አዲስ ኮርስ አክል',
 
     // Teachers & Coordinators
-    employeeId: 'የሰራተኛ መታወቂያ',
+    employeeId: 'መታወቂያ ኮድ',
     fullName: 'ሙሉ ስም',
     amharicName: 'አማርኛ ስም',
     phone: 'ስልክ ቁጥር',
