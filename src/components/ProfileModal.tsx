@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { User, Camera, Save, X, Phone, Mail, User as UserIcon, Building, CheckCircle2 } from 'lucide-react';
@@ -12,20 +12,34 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
   const { user, updateProfile } = useAuth();
   const { t } = useLanguage();
 
-  if (!isOpen || !user) return null;
-
   const [formData, setFormData] = useState({
-    name: user.name || '',
-    amharicName: user.amharicName || '',
-    email: user.email || '',
-    phone: user.phone || '',
-    department: user.department || '',
-    avatar: user.avatar || '',
+    name: user?.name || '',
+    amharicName: user?.amharicName || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    department: user?.department || '',
+    avatar: user?.avatar || '',
   });
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [previewAvatar, setPreviewAvatar] = useState<string>(user.avatar || '');
+  const [previewAvatar, setPreviewAvatar] = useState<string>(user?.avatar || '');
+
+  useEffect(() => {
+    if (user && isOpen) {
+      setFormData({
+        name: user.name || '',
+        amharicName: user.amharicName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        department: user.department || '',
+        avatar: user.avatar || '',
+      });
+      setPreviewAvatar(user.avatar || '');
+    }
+  }, [user, isOpen]);
+
+  if (!isOpen || !user) return null;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
