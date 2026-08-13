@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { AcademicClass, Course, User } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
-import { BookOpen, Plus, Search, CheckCircle2, UserCheck } from 'lucide-react';
+import { BookOpen, Plus, Search, CheckCircle2, UserCheck, Pencil } from 'lucide-react';
 
 export const CoursesView: React.FC = () => {
   const { user } = useAuth();
@@ -14,6 +14,8 @@ export const CoursesView: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   // New Course Form State
   const [formData, setFormData] = useState({
@@ -26,6 +28,23 @@ export const CoursesView: React.FC = () => {
     academicYear: getCurrentAcademicYear(),
     teacherId: '',
     coordinatorId: user?.role === 'COORDINATOR' ? user.id : '',
+    maxAssignment: 15,
+    maxQuiz: 10,
+    maxMidterm: 25,
+    maxFinal: 50,
+  });
+
+  // Edit Course Form State
+  const [editFormData, setEditFormData] = useState({
+    code: '',
+    title: '',
+    amharicTitle: '',
+    creditHours: 3,
+    classId: 'cls-1',
+    semester: 'Semester I' as any,
+    academicYear: getCurrentAcademicYear(),
+    teacherId: '',
+    coordinatorId: '',
     maxAssignment: 15,
     maxQuiz: 10,
     maxMidterm: 25,
@@ -46,6 +65,7 @@ export const CoursesView: React.FC = () => {
 
   const teachers = users.filter((u) => u.role === 'TEACHER');
   const coordinators = users.filter((u) => u.role === 'COORDINATOR' || u.role === 'DEPT_HEAD');
+  const canManageCourses = user?.role === 'ADMIN' || user?.role === 'COORDINATOR' || user?.role === 'DEPT_HEAD';
 
   // Teachers see all or filtered courses with priority tag
   const filteredCourses = courses.filter(
@@ -69,6 +89,47 @@ export const CoursesView: React.FC = () => {
     const res = await api.createCourse(payload);
     if (res.success) {
       setShowAddModal(false);
+      loadData();
+    }
+  };
+
+  const handleStartEdit = (course: Course) => {
+    setEditingCourse(course);
+    setEditFormData({
+      code: course.code,
+      title: course.title,
+      amharicTitle: course.amharicTitle,
+      creditHours: course.creditHours,
+      classId: course.classId,
+      semester: course.semester,
+      academicYear: course.academicYear || getCurrentAcademicYear(),
+      teacherId: course.teacherId || '',
+      coordinatorId: course.coordinatorId || '',
+      maxAssignment: course.maxAssignment,
+      maxQuiz: course.maxQuiz,
+      maxMidterm: course.maxMidterm,
+      maxFinal: course.maxFinal,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCourse) return;
+
+    const teacher = teachers.find((t) => t.id === editFormData.teacherId);
+    const coordinator = coordinators.find((c) => c.id === editFormData.coordinatorId);
+
+    const payload = {
+      ...editFormData,
+      teacherName: teacher ? teacher.name : editFormData.teacherId ? editingCourse.teacherName : '',
+      coordinatorName: coordinator ? coordinator.name : editFormData.coordinatorId ? editingCourse.coordinatorName : '',
+    };
+
+    const res = await api.updateCourse(editingCourse.id, payload);
+    if (res.success) {
+      setShowEditModal(false);
+      setEditingCourse(null);
       loadData();
     }
   };
@@ -129,6 +190,7 @@ export const CoursesView: React.FC = () => {
                 <th className="p-4">{t('assignedTeacher')}</th>
                 <th className="p-4">{t('assignedCoordinator')}</th>
                 <th className="p-4">{t('maxMarksSplit')}</th>
+                {canManageCourses && <th className="p-4 text-center">{t('edit')}</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#3A1E10]">
@@ -165,6 +227,17 @@ export const CoursesView: React.FC = () => {
                     <td className="p-4 text-[11px] font-mono text-[#F5A623]">
                       A:{c.maxAssignment} | Q:{c.maxQuiz} | M:{c.maxMidterm} | F:{c.maxFinal} = 100
                     </td>
+                    {canManageCourses && (
+                      <td className="p-4 text-center">
+                        <button
+                          onClick={() => handleStartEdit(c)}
+                          className="p-1.5 bg-[#351C0F] hover:bg-[#E5921A] text-[#F5A623] hover:text-[#1E0C04] rounded-lg transition border border-[#5C321B]"
+                          title={t('editCourse')}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -339,6 +412,190 @@ export const CoursesView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-[#351C0F] text-[#CBB39C] font-semibold rounded-xl hover:bg-[#442413]"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#E5921A] hover:bg-[#FBB03B] text-[#1E0C04] font-bold rounded-xl shadow-lg"
+                >
+                  {t('save')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Course Modal */}
+      {showEditModal && editingCourse && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-[#27140B] border border-[#522B17] w-full max-w-xl rounded-2xl p-6 shadow-2xl text-white space-y-4">
+            <h3 className="text-lg font-bold text-[#F5A623] flex items-center gap-2">
+              <Pencil className="w-5 h-5" />
+              <span>{t('editCourse')} ({editingCourse.code})</span>
+            </h3>
+
+            <form onSubmit={handleUpdateCourse} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('courseCode')}</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.code}
+                    onChange={(e) => setEditFormData({ ...editFormData, code: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('creditHours')}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="6"
+                    value={editFormData.creditHours}
+                    onChange={(e) => setEditFormData({ ...editFormData, creditHours: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#CBB39C] mb-1">{t('courseTitle')} (English)</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  placeholder="e.g. Christian Ethics & History"
+                  className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#CBB39C] mb-1">{t('courseAmharicTitle')} (አማርኛ)</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.amharicTitle}
+                  onChange={(e) => setEditFormData({ ...editFormData, amharicTitle: e.target.value })}
+                  placeholder="e.g. ክርስቲያናዊ ስነ-ምግባር እና ታሪክ"
+                  className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('classLevel')}</label>
+                  <select
+                    value={editFormData.classId}
+                    onChange={(e) => setEditFormData({ ...editFormData, classId: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  >
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name} ({cls.amharicName})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('semester')}</label>
+                  <select
+                    value={editFormData.semester}
+                    onChange={(e) => setEditFormData({ ...editFormData, semester: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  >
+                    <option value="Semester I">Semester I</option>
+                    <option value="Semester II">Semester II</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('assignedTeacher')}</label>
+                  <select
+                    value={editFormData.teacherId}
+                    onChange={(e) => setEditFormData({ ...editFormData, teacherId: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  >
+                    <option value="">Select Instructor...</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('assignedCoordinator')}</label>
+                  <select
+                    value={editFormData.coordinatorId}
+                    onChange={(e) => setEditFormData({ ...editFormData, coordinatorId: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  >
+                    <option value="">Select Coordinator...</option>
+                    {coordinators.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[#4A2715]">
+                <label className="block text-[#CBB39C] font-semibold mb-2">Max Marks Breakdown (Must sum to 100)</label>
+                <div className="grid grid-cols-4 gap-2">
+                  <div>
+                    <span className="text-[10px] text-[#A68F7B]">Assignment</span>
+                    <input
+                      type="number"
+                      value={editFormData.maxAssignment}
+                      onChange={(e) => setEditFormData({ ...editFormData, maxAssignment: Number(e.target.value) })}
+                      className="w-full px-2 py-1.5 bg-[#180B05] border border-[#5C321B] rounded-lg text-center text-white font-bold"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[#A68F7B]">Quiz</span>
+                    <input
+                      type="number"
+                      value={editFormData.maxQuiz}
+                      onChange={(e) => setEditFormData({ ...editFormData, maxQuiz: Number(e.target.value) })}
+                      className="w-full px-2 py-1.5 bg-[#180B05] border border-[#5C321B] rounded-lg text-center text-white font-bold"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[#A68F7B]">Midterm</span>
+                    <input
+                      type="number"
+                      value={editFormData.maxMidterm}
+                      onChange={(e) => setEditFormData({ ...editFormData, maxMidterm: Number(e.target.value) })}
+                      className="w-full px-2 py-1.5 bg-[#180B05] border border-[#5C321B] rounded-lg text-center text-white font-bold"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[#A68F7B]">Final Exam</span>
+                    <input
+                      type="number"
+                      value={editFormData.maxFinal}
+                      onChange={(e) => setEditFormData({ ...editFormData, maxFinal: Number(e.target.value) })}
+                      className="w-full px-2 py-1.5 bg-[#180B05] border border-[#5C321B] rounded-lg text-center text-white font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-[#4A2715]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingCourse(null);
+                  }}
                   className="px-4 py-2 bg-[#351C0F] text-[#CBB39C] font-semibold rounded-xl hover:bg-[#442413]"
                 >
                   {t('cancel')}

@@ -94,6 +94,7 @@ export const translations = {
     assignedCoordinator: 'Assigned Coordinator',
     maxMarksSplit: 'Max Marks Breakdown (Assignment / Quiz / Midterm / Final)',
     addNewCourse: 'Add New Course',
+    editCourse: 'Edit Course',
 
     // Teachers & Coordinators
     employeeId: 'ID Code',
@@ -260,6 +261,7 @@ export const translations = {
     assignedCoordinator: 'የተመደበ አስተባባሪ',
     maxMarksSplit: 'የማርክ ክፍፍል (አሳይመንት / ኪዊዝ / ሚድ / ፋይናል)',
     addNewCourse: 'አዲስ ኮርስ አክል',
+    editCourse: 'ኮርስ አሻሽል',
 
     // Teachers & Coordinators
     employeeId: 'መታወቂያ ኮድ',
