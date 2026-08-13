@@ -60,8 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const switchDemoUser = async (role: UserRole) => {
     const roleEmails: Record<UserRole, string> = {
-      ADMIN: 'admin@amras.edu',
-      DEPT_HEAD: 'head@amras.edu',
+      ADMIN: 'ashu@admin.edu',
+      DEPT_HEAD: 'bura@head.edu',
       TEACHER: 'teacher1@amras.edu',
       COORDINATOR: 'coordinator@amras.edu',
     };

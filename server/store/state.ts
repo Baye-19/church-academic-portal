@@ -623,6 +623,13 @@ export async function initFirestoreData() {
       console.log('🔄 Loading persisted records from Cloud Firestore database...');
       users = dbUsers;
 
+      // Ensure Admin user has ashu@admin.edu email updated in memory and Firestore
+      const adminUsr = users.find((u) => u.id === 'usr-1' || u.role === 'ADMIN');
+      if (adminUsr) {
+        adminUsr.email = 'ashu@admin.edu';
+        await dbSaveDoc('users', adminUsr.id, adminUsr);
+      }
+
       const dbClasses = await dbGetCollection('academicClasses');
       if (dbClasses.length > 0) academicClasses = dbClasses;
 
