@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { LoginModal } from './components/LoginModal';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -17,11 +17,33 @@ import { ReviewQueueView } from './components/ReviewQueueView';
 import { AuditLogView } from './components/AuditLogView';
 import { UsersView } from './components/UsersView';
 import { AttendanceView } from './components/AttendanceView';
+import { ArrowLeft } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const { t } = useLanguage();
+  const [activeTab, setActiveTabState] = useState<string>('dashboard');
+  const [tabHistory, setTabHistory] = useState<string[]>(['dashboard']);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  const setActiveTab = (newTab: string) => {
+    if (newTab !== activeTab) {
+      setTabHistory((prev) => [...prev, newTab]);
+      setActiveTabState(newTab);
+    }
+  };
+
+  const handleGoBack = () => {
+    if (tabHistory.length > 1) {
+      const newHistory = [...tabHistory];
+      newHistory.pop(); // remove current
+      const previousTab = newHistory[newHistory.length - 1];
+      setTabHistory(newHistory);
+      setActiveTabState(previousTab || 'dashboard');
+    } else {
+      setActiveTabState('dashboard');
+    }
+  };
 
   if (loading) {
     return (
@@ -72,6 +94,8 @@ const MainAppContent: React.FC = () => {
       <Header
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
+        onGoBack={handleGoBack}
+        canGoBack={activeTab !== 'dashboard'}
       />
 
       {/* Main Workspace Layout */}
@@ -87,6 +111,18 @@ const MainAppContent: React.FC = () => {
         {/* Dynamic Content View */}
         <main className="flex-1 min-h-0 bg-[#180B05] overflow-y-auto min-w-0 flex flex-col justify-between">
           <div className="flex-1">
+            {activeTab !== 'dashboard' && (
+              <div className="px-3 sm:px-6 pt-3 pb-1 flex items-center justify-between border-b border-[#3A1E10]/40">
+                <button
+                  onClick={handleGoBack}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#27140B] hover:bg-[#351C0F] text-[#F5A623] hover:text-white border border-[#5C321B] rounded-xl text-xs font-bold transition shadow-md group"
+                  title={t('back')}
+                >
+                  <ArrowLeft className="w-4 h-4 text-[#F5A623] group-hover:-translate-x-1 transition-transform" />
+                  <span>{t('back')}</span>
+                </button>
+              </div>
+            )}
             {renderActiveTab()}
           </div>
 

@@ -3,16 +3,18 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { Notification } from '../types';
-import { Bell, Globe, LogOut, User as UserIcon, Menu, X } from 'lucide-react';
+import { Bell, Globe, LogOut, User as UserIcon, Menu, X, ArrowLeft } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 import { ChurchLogo } from './ChurchLogo';
 
 interface HeaderProps {
   onToggleMobileMenu?: () => void;
   isMobileMenuOpen?: boolean;
+  onGoBack?: () => void;
+  canGoBack?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenuOpen, onGoBack, canGoBack }) => {
   const { user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -72,6 +74,16 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
       <header className="h-16 bg-[#180B05] border-b border-[#4A2715] text-[#F7E5C8] px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xl">
         {/* Left Branding with Logo Domes Emblem & Mobile Hamburger Button */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {canGoBack && onGoBack && (
+            <button
+              onClick={onGoBack}
+              className="p-2 rounded-xl bg-[#27140B] hover:bg-[#351C0F] text-[#F5A623] border border-[#522B17] transition flex items-center justify-center"
+              title={t('back')}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+
           {/* Mobile Menu Toggle Button */}
           {onToggleMobileMenu && (
             <button
