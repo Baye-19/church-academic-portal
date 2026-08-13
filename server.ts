@@ -1,11 +1,73 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
+import { initializeApp as initFirebaseApp, getApps as getFirebaseApps } from 'firebase/app';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// Firebase Firestore Cloud Database Setup
+let db: any = null;
+
+try {
+  const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    const firebaseConfig = {
+      apiKey: config.apiKey,
+      authDomain: config.authDomain,
+      projectId: config.projectId,
+      storageBucket: config.storageBucket,
+      messagingSenderId: config.messagingSenderId,
+      appId: config.appId,
+    };
+
+    const firebaseApp = !getFirebaseApps().length ? initFirebaseApp(firebaseConfig) : getFirebaseApps()[0];
+    db = config.firestoreDatabaseId && config.firestoreDatabaseId.trim() !== ''
+      ? getFirestore(firebaseApp, config.firestoreDatabaseId)
+      : getFirestore(firebaseApp);
+    console.log('✅ Connected to Firebase Firestore Database:', config.projectId);
+  }
+} catch (err) {
+  console.error('❌ Firebase connection error:', err);
+}
+
+// Firestore Helper Functions
+async function dbGetCollection(colName: string): Promise<any[]> {
+  if (!db) return [];
+  try {
+    const colRef = collection(db, colName);
+    const snapshot = await getDocs(colRef);
+    return snapshot.docs.map((d) => ({ ...d.data() }));
+  } catch (e) {
+    console.error(`Error reading ${colName} from Firestore:`, e);
+    return [];
+  }
+}
+
+async function dbSaveDoc(colName: string, docId: string, data: any) {
+  if (!db) return;
+  try {
+    const docRef = doc(db, colName, docId);
+    await setDoc(docRef, JSON.parse(JSON.stringify(data)), { merge: true });
+  } catch (e) {
+    console.error(`Error saving doc ${docId} in ${colName} to Firestore:`, e);
+  }
+}
+
+async function dbDeleteDoc(colName: string, docId: string) {
+  if (!db) return;
+  try {
+    const docRef = doc(db, colName, docId);
+    await deleteDoc(docRef);
+  } catch (e) {
+    console.error(`Error deleting doc ${docId} in ${colName} from Firestore:`, e);
+  }
+}
 
 // In-Memory Database State (Pre-seeded with realistic data)
 let users = [
@@ -623,7 +685,7 @@ function calculateGrade(total: number) {
 // REST API ROUTES
 
 // Auth Login
-app.post('/api/auth/login', (req: Request, res: Response) => {
+app.post('/api/auth/login', async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const user = users.find((u) => u.email.toLowerCase() === (email || '').toLowerCase().trim());
   if (!user) {
@@ -631,7 +693,7 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
   }
 
   // Record Audit Log
-  auditLogs.unshift({
+  const logObj = {
     id: `log-${Date.now()}`,
     timestamp: new Date().toISOString(),
     userId: user.id,
@@ -640,7 +702,9 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     action: 'USER_LOGIN',
     details: `User ${user.email} logged in successfully`,
     ip: req.ip || '127.0.0.1',
-  });
+  };
+  auditLogs.unshift(logObj);
+  dbSaveDoc('auditLogs', logObj.id, logObj);
 
   res.json({
     success: true,
@@ -654,7 +718,7 @@ app.get('/api/users', (req: Request, res: Response) => {
   res.json({ success: true, data: users });
 });
 
-app.post('/api/users', (req: Request, res: Response) => {
+app.post('/api/users', async (req: Request, res: Response) => {
   const newUser = {
     id: `usr-${Date.now()}`,
     ...req.body,
@@ -662,10 +726,11 @@ app.post('/api/users', (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
   };
   users.push(newUser);
+  await dbSaveDoc('users', newUser.id, newUser);
   res.json({ success: true, data: newUser });
 });
 
-app.put('/api/users/:id/profile', (req: Request, res: Response) => {
+app.put('/api/users/:id/profile', async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = users.find((u) => u.id === id);
   if (!user) {
@@ -680,6 +745,7 @@ app.put('/api/users/:id/profile', (req: Request, res: Response) => {
   if (department !== undefined) user.department = department;
   if (avatar !== undefined) (user as any).avatar = avatar;
 
+  await dbSaveDoc('users', user.id, user);
   res.json({ success: true, data: user });
 });
 
@@ -688,7 +754,7 @@ app.get('/api/classes', (req: Request, res: Response) => {
   res.json({ success: true, data: academicClasses });
 });
 
-app.post('/api/classes', (req: Request, res: Response) => {
+app.post('/api/classes', async (req: Request, res: Response) => {
   const { name, amharicName, level, academicYear, sections, semesters } = req.body;
   const newClass = {
     id: `cls-${Date.now()}`,
@@ -700,10 +766,11 @@ app.post('/api/classes', (req: Request, res: Response) => {
     semesters: Array.isArray(semesters) && semesters.length > 0 ? semesters : ['Semester I', 'Semester II'],
   };
   academicClasses.push(newClass);
+  await dbSaveDoc('academicClasses', newClass.id, newClass);
   res.json({ success: true, data: newClass });
 });
 
-app.put('/api/classes/:id', (req: Request, res: Response) => {
+app.put('/api/classes/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const index = academicClasses.findIndex((c) => c.id === id);
   if (index === -1) {
@@ -713,6 +780,7 @@ app.put('/api/classes/:id', (req: Request, res: Response) => {
     ...academicClasses[index],
     ...req.body,
   };
+  await dbSaveDoc('academicClasses', academicClasses[index].id, academicClasses[index]);
   res.json({ success: true, data: academicClasses[index] });
 });
 
@@ -720,10 +788,11 @@ app.get('/api/academic-years', (req: Request, res: Response) => {
   res.json({ success: true, data: academicYears });
 });
 
-app.post('/api/academic-years', (req: Request, res: Response) => {
+app.post('/api/academic-years', async (req: Request, res: Response) => {
   const { year } = req.body;
   if (year && !academicYears.includes(year)) {
     academicYears.push(year);
+    await dbSaveDoc('academicYears', year, { id: year, year });
   }
   res.json({ success: true, data: academicYears });
 });
@@ -733,17 +802,18 @@ app.get('/api/courses', (req: Request, res: Response) => {
   res.json({ success: true, data: courses });
 });
 
-app.post('/api/courses', (req: Request, res: Response) => {
+app.post('/api/courses', async (req: Request, res: Response) => {
   const newCourse = {
     id: `crs-${Date.now()}`,
     ...req.body,
     status: 'ACTIVE',
   };
   courses.push(newCourse);
+  await dbSaveDoc('courses', newCourse.id, newCourse);
   res.json({ success: true, data: newCourse });
 });
 
-app.put('/api/courses/:id', (req: Request, res: Response) => {
+app.put('/api/courses/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const index = courses.findIndex((c) => c.id === id);
   if (index === -1) {
@@ -753,6 +823,7 @@ app.put('/api/courses/:id', (req: Request, res: Response) => {
     ...courses[index],
     ...req.body,
   };
+  await dbSaveDoc('courses', courses[index].id, courses[index]);
   res.json({ success: true, data: courses[index] });
 });
 
@@ -761,7 +832,7 @@ app.get('/api/students', (req: Request, res: Response) => {
   res.json({ success: true, data: students });
 });
 
-app.post('/api/students', (req: Request, res: Response) => {
+app.post('/api/students', async (req: Request, res: Response) => {
   const newStudent = {
     id: `std-${Date.now()}`,
     studentId: req.body.studentId || `ST-2026-${Math.floor(100 + Math.random() * 900)}`,
@@ -769,7 +840,26 @@ app.post('/api/students', (req: Request, res: Response) => {
     status: 'ACTIVE',
   };
   students.push(newStudent);
+  await dbSaveDoc('students', newStudent.id, newStudent);
   res.json({ success: true, data: newStudent });
+});
+
+app.put('/api/students/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = students.findIndex((s) => s.id === id);
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: 'Student not found' });
+  }
+  students[index] = { ...students[index], ...req.body };
+  await dbSaveDoc('students', id, students[index]);
+  res.json({ success: true, data: students[index] });
+});
+
+app.delete('/api/students/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  students = students.filter((s) => s.id !== id);
+  await dbDeleteDoc('students', id);
+  res.json({ success: true, message: 'Student removed' });
 });
 
 // Marks
@@ -782,10 +872,10 @@ app.get('/api/marks', (req: Request, res: Response) => {
   res.json({ success: true, data: marks });
 });
 
-app.post('/api/marks/save', (req: Request, res: Response) => {
+app.post('/api/marks/save', async (req: Request, res: Response) => {
   const { courseId, entries, isSubmit, teacherId, teacherName } = req.body;
 
-  entries.forEach((entry: any) => {
+  for (const entry of entries) {
     let total = Number(entry.assignment || 0) + Number(entry.quiz || 0) + Number(entry.midterm || 0) + Number(entry.final || 0);
     if (entry.customMarks && typeof entry.customMarks === 'object') {
       Object.values(entry.customMarks).forEach((val: any) => {
@@ -821,7 +911,8 @@ app.post('/api/marks/save', (req: Request, res: Response) => {
     } else {
       marks.push(markObj);
     }
-  });
+    await dbSaveDoc('marks', markObj.id, markObj);
+  }
 
   if (isSubmit) {
     // Add or update review submission
@@ -847,9 +938,10 @@ app.post('/api/marks/save', (req: Request, res: Response) => {
     } else {
       submissionReviews.push(updatedSub);
     }
+    await dbSaveDoc('submissionReviews', updatedSub.id, updatedSub);
 
     // Add Audit Log
-    auditLogs.unshift({
+    const logObj = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toISOString(),
       userId: teacherId || 'usr-3',
@@ -858,7 +950,9 @@ app.post('/api/marks/save', (req: Request, res: Response) => {
       action: 'MARKS_SUBMITTED',
       details: `Submitted marks for ${courseObj?.code} (${entries.length} students)`,
       ip: req.ip || '127.0.0.1',
-    });
+    };
+    auditLogs.unshift(logObj);
+    await dbSaveDoc('auditLogs', logObj.id, logObj);
 
     // Resolve class details
     const classObj = academicClasses.find((cls) => cls.id === courseObj?.classId);
@@ -947,7 +1041,7 @@ app.get('/api/submissions', (req: Request, res: Response) => {
   res.json({ success: true, data: submissionReviews });
 });
 
-app.post('/api/submissions/:id/approve', (req: Request, res: Response) => {
+app.post('/api/submissions/:id/approve', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { reviewerId, reviewerName } = req.body;
   const sub = submissionReviews.find((s) => s.id === id);
@@ -955,16 +1049,18 @@ app.post('/api/submissions/:id/approve', (req: Request, res: Response) => {
   if (sub) {
     sub.status = 'APPROVED';
     sub.reviewedAt = new Date().toISOString();
+    await dbSaveDoc('submissionReviews', sub.id, sub);
 
     // Mark corresponding marks as APPROVED
-    marks.forEach((m) => {
+    for (const m of marks) {
       if (m.courseId === sub.courseId) {
         m.status = 'APPROVED';
+        await dbSaveDoc('marks', m.id, m);
       }
-    });
+    }
 
     // Add Audit Log
-    auditLogs.unshift({
+    const logObj = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toISOString(),
       userId: reviewerId || 'usr-5',
@@ -973,7 +1069,9 @@ app.post('/api/submissions/:id/approve', (req: Request, res: Response) => {
       action: 'MARKS_APPROVED',
       details: `Approved marks for ${sub.courseCode}`,
       ip: req.ip || '127.0.0.1',
-    });
+    };
+    auditLogs.unshift(logObj);
+    await dbSaveDoc('auditLogs', logObj.id, logObj);
 
     // Notify Teacher
     notifications.unshift({
@@ -990,7 +1088,7 @@ app.post('/api/submissions/:id/approve', (req: Request, res: Response) => {
   res.json({ success: true, message: 'Submission approved' });
 });
 
-app.post('/api/submissions/:id/reject', (req: Request, res: Response) => {
+app.post('/api/submissions/:id/reject', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { reviewerId, reviewerName, reason } = req.body;
   const sub = submissionReviews.find((s) => s.id === id);
@@ -999,17 +1097,19 @@ app.post('/api/submissions/:id/reject', (req: Request, res: Response) => {
     sub.status = 'REJECTED';
     sub.rejectionReason = reason;
     sub.reviewedAt = new Date().toISOString();
+    await dbSaveDoc('submissionReviews', sub.id, sub);
 
     // Set marks back to REJECTED with reason
-    marks.forEach((m) => {
+    for (const m of marks) {
       if (m.courseId === sub.courseId) {
         m.status = 'REJECTED';
         m.rejectionReason = reason;
+        await dbSaveDoc('marks', m.id, m);
       }
-    });
+    }
 
     // Audit Log
-    auditLogs.unshift({
+    const logObj = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toISOString(),
       userId: reviewerId || 'usr-5',
@@ -1018,7 +1118,9 @@ app.post('/api/submissions/:id/reject', (req: Request, res: Response) => {
       action: 'MARKS_REJECTED',
       details: `Rejected marks for ${sub.courseCode}. Reason: ${reason}`,
       ip: req.ip || '127.0.0.1',
-    });
+    };
+    auditLogs.unshift(logObj);
+    await dbSaveDoc('auditLogs', logObj.id, logObj);
 
     // Notify Teacher
     notifications.unshift({
@@ -1040,7 +1142,7 @@ app.get('/api/schedules', (req: Request, res: Response) => {
   res.json({ success: true, data: schedules });
 });
 
-app.post('/api/schedules', (req: Request, res: Response) => {
+app.post('/api/schedules', async (req: Request, res: Response) => {
   const newSched = req.body;
 
   // Conflict Detection: check if same teacher or room at same day and overlapping time
@@ -1072,11 +1174,12 @@ app.post('/api/schedules', (req: Request, res: Response) => {
     ...newSched,
   };
   schedules.push(added);
+  await dbSaveDoc('schedules', added.id, added);
 
   res.json({ success: true, data: added });
 });
 
-app.put('/api/schedules/:id', (req: Request, res: Response) => {
+app.put('/api/schedules/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const index = schedules.findIndex((s) => s.id === id);
   if (index === -1) {
@@ -1112,13 +1215,15 @@ app.put('/api/schedules/:id', (req: Request, res: Response) => {
     ...schedules[index],
     ...newSched,
   };
+  await dbSaveDoc('schedules', id, schedules[index]);
 
   res.json({ success: true, data: schedules[index] });
 });
 
-app.delete('/api/schedules/:id', (req: Request, res: Response) => {
+app.delete('/api/schedules/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   schedules = schedules.filter((s) => s.id !== id);
+  await dbDeleteDoc('schedules', id);
   res.json({ success: true, message: 'Schedule removed' });
 });
 
@@ -1135,7 +1240,7 @@ app.get('/api/attendance', (req: Request, res: Response) => {
   res.json({ success: true, data: filtered });
 });
 
-app.post('/api/attendance', (req: Request, res: Response) => {
+app.post('/api/attendance', async (req: Request, res: Response) => {
   const { classId, className, section, date, takenByUserId, takenByUserName, entries } = req.body;
 
   const existingIdx = attendanceRecords.findIndex((a) => a.classId === classId && a.date === date);
@@ -1157,9 +1262,10 @@ app.post('/api/attendance', (req: Request, res: Response) => {
   } else {
     attendanceRecords.unshift(recordObj);
   }
+  await dbSaveDoc('attendanceRecords', recordObj.id, recordObj);
 
   // Audit log entry
-  auditLogs.unshift({
+  const logObj = {
     id: `log-${Date.now()}`,
     timestamp: new Date().toISOString(),
     userId: takenByUserId || 'usr-1',
@@ -1168,7 +1274,9 @@ app.post('/api/attendance', (req: Request, res: Response) => {
     action: 'ATTENDANCE_TAKEN',
     details: `Recorded attendance for ${className} on ${date} (${entries.length} students)`,
     ip: req.ip || '127.0.0.1',
-  });
+  };
+  auditLogs.unshift(logObj);
+  await dbSaveDoc('auditLogs', logObj.id, logObj);
 
   res.json({ success: true, data: recordObj });
 });
@@ -1192,8 +1300,66 @@ app.post('/api/notifications/:id/read', (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+// Firestore Initialization and Seeding Data Sync
+async function initFirestoreData() {
+  if (!db) return;
+  try {
+    const dbUsers = await dbGetCollection('users');
+    if (dbUsers && dbUsers.length > 0) {
+      console.log('🔄 Loading persisted records from Cloud Firestore database...');
+      users = dbUsers;
+
+      const dbClasses = await dbGetCollection('academicClasses');
+      if (dbClasses.length > 0) academicClasses = dbClasses;
+
+      const dbYears = await dbGetCollection('academicYears');
+      if (dbYears.length > 0) academicYears = dbYears.map((y: any) => y.year || y.id);
+
+      const dbCourses = await dbGetCollection('courses');
+      if (dbCourses.length > 0) courses = dbCourses;
+
+      const dbStudents = await dbGetCollection('students');
+      if (dbStudents.length > 0) students = dbStudents;
+
+      const dbMarks = await dbGetCollection('marks');
+      if (dbMarks.length > 0) marks = dbMarks;
+
+      const dbSubmissions = await dbGetCollection('submissionReviews');
+      if (dbSubmissions.length > 0) submissionReviews = dbSubmissions;
+
+      const dbSchedules = await dbGetCollection('schedules');
+      if (dbSchedules.length > 0) schedules = dbSchedules;
+
+      const dbAttendance = await dbGetCollection('attendanceRecords');
+      if (dbAttendance.length > 0) attendanceRecords = dbAttendance;
+
+      const dbAuditLogs = await dbGetCollection('auditLogs');
+      if (dbAuditLogs.length > 0) auditLogs = dbAuditLogs;
+
+      console.log(`✅ Firestore loaded: ${students.length} students, ${marks.length} mark records, and ${attendanceRecords.length} attendance logs.`);
+    } else {
+      console.log('🌱 Seeding initial records to Cloud Firestore database...');
+      for (const u of users) await dbSaveDoc('users', u.id, u);
+      for (const c of academicClasses) await dbSaveDoc('academicClasses', c.id, c);
+      for (const y of academicYears) await dbSaveDoc('academicYears', y, { id: y, year: y });
+      for (const crs of courses) await dbSaveDoc('courses', crs.id, crs);
+      for (const st of students) await dbSaveDoc('students', st.id, st);
+      for (const m of marks) await dbSaveDoc('marks', m.id, m);
+      for (const s of submissionReviews) await dbSaveDoc('submissionReviews', s.id, s);
+      for (const sch of schedules) await dbSaveDoc('schedules', sch.id, sch);
+      for (const att of attendanceRecords) await dbSaveDoc('attendanceRecords', att.id, att);
+      for (const log of auditLogs) await dbSaveDoc('auditLogs', log.id, log);
+      console.log('✅ Initial database seed complete in Firestore!');
+    }
+  } catch (err) {
+    console.error('Error during Firestore data initialization:', err);
+  }
+}
+
 // Vite Development or Static Production Middleware
 async function startServer() {
+  await initFirestoreData();
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },

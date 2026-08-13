@@ -1,0 +1,152 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "System users including Admin, Dept Head, Teacher, Coordinator",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amharicName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "department": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "academicClasses": {
+      "title": "Academic Classes",
+      "description": "Sunday school academic classes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amharicName": { "type": "string" },
+        "level": { "type": "number" },
+        "academicYear": { "type": "string" },
+        "sections": { "type": "array", "items": { "type": "string" } },
+        "semesters": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "name", "level"]
+    },
+    "courses": {
+      "title": "Courses",
+      "description": "Courses offered in classes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "title": { "type": "string" },
+        "amharicTitle": { "type": "string" },
+        "creditHours": { "type": "number" },
+        "classId": { "type": "string" },
+        "semester": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "coordinatorId": { "type": "string" },
+        "coordinatorName": { "type": "string" },
+        "maxAssignment": { "type": "number" },
+        "maxQuiz": { "type": "number" },
+        "maxMidterm": { "type": "number" },
+        "maxFinal": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "code", "title", "classId"]
+    },
+    "students": {
+      "title": "Students",
+      "description": "Student records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "amharicName": { "type": "string" },
+        "gender": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "section": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "studentId", "firstName", "lastName", "classId"]
+    },
+    "marks": {
+      "title": "Marks",
+      "description": "Student course marks",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentCode": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentAmharicName": { "type": "string" },
+        "courseId": { "type": "string" },
+        "assignment": { "type": "number" },
+        "quiz": { "type": "number" },
+        "midterm": { "type": "number" },
+        "final": { "type": "number" },
+        "total": { "type": "number" },
+        "grade": { "type": "string" },
+        "gradePoint": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "studentId", "courseId"]
+    },
+    "attendanceRecords": {
+      "title": "Attendance Records",
+      "description": "Student attendance tracking entries",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "classId": { "type": "string" },
+        "className": { "type": "string" },
+        "section": { "type": "string" },
+        "takenByUserId": { "type": "string" },
+        "takenByUserName": { "type": "string" },
+        "entries": { "type": "array" }
+      },
+      "required": ["id", "date", "classId"]
+    },
+    "schedules": {
+      "title": "Schedules",
+      "description": "Class schedules",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "courseId": { "type": "string" },
+        "classId": { "type": "string" },
+        "day": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "room": { "type": "string" }
+      },
+      "required": ["id", "courseId", "classId"]
+    },
+    "auditLogs": {
+      "title": "Audit Logs",
+      "description": "System action logs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userRole": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "ip": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "userId"]
+    }
+  }
+}
