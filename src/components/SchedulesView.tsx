@@ -2,16 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
-import { Course, DayOfWeek, ScheduleItem, User } from '../types';
-import { Calendar, Plus, AlertTriangle, Trash2, Clock, MapPin, Edit3, ShieldAlert } from 'lucide-react';
+import { AcademicClass, Course, DayOfWeek, ScheduleItem, User } from '../types';
+import { Calendar, Plus, AlertTriangle, Trash2, Clock, MapPin, Edit3, ShieldAlert, CheckSquare, Filter } from 'lucide-react';
+import { formatTimeStringToEthiopian } from '../utils/ethiopianCalendar';
 
 export const SchedulesView: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [teachers, setTeachers] = useState<User[]>([]);
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string>('ALL');
   const [showModal, setShowModal] = useState(false);
   const [editingSched, setEditingSched] = useState<ScheduleItem | null>(null);
   const [conflictError, setConflictError] = useState('');
@@ -19,7 +22,17 @@ export const SchedulesView: React.FC = () => {
   const canEditSchedule =
     user?.role === 'ADMIN' || user?.role === 'COORDINATOR' || user?.role === 'DEPT_HEAD';
 
-  const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  const dayLabels: Record<DayOfWeek, { en: string; am: string }> = {
+    Monday: { en: 'Monday', am: 'ሰኞ' },
+    Tuesday: { en: 'Tuesday', am: 'ማክሰኞ' },
+    Wednesday: { en: 'Wednesday', am: 'ረቡዕ' },
+    Thursday: { en: 'Thursday', am: 'ሐሙስ' },
+    Friday: { en: 'Friday', am: 'አርብ' },
+    Saturday: { en: 'Saturday', am: 'ቅዳሜ' },
+    Sunday: { en: 'Sunday', am: 'እሑድ' },
+  };
 
   const [formData, setFormData] = useState({
     courseId: '',
@@ -33,10 +46,11 @@ export const SchedulesView: React.FC = () => {
   });
 
   const loadData = () => {
-    Promise.all([api.getSchedules(), api.getCourses(), api.getUsers()]).then(
-      ([schRes, crsRes, usrRes]) => {
+    Promise.all([api.getSchedules(), api.getCourses(), api.getUsers(), api.getClasses()]).then(
+      ([schRes, crsRes, usrRes, clsRes]) => {
         if (schRes.success) setSchedules(schRes.data);
         if (crsRes.success) setCourses(crsRes.data);
+        if (clsRes.success) setClasses(clsRes.data);
         if (usrRes.success) {
           setTeachers(usrRes.data.filter((u) => u.role === 'TEACHER'));
         }
@@ -51,11 +65,14 @@ export const SchedulesView: React.FC = () => {
   const handleOpenAdd = () => {
     setEditingSched(null);
     setConflictError('');
+    const firstCourse = courses[0];
+    const initialClassId = firstCourse?.classId || classes[0]?.id || 'cls-1';
+    const targetClass = classes.find((c) => c.id === initialClassId);
     setFormData({
-      courseId: courses[0]?.id || '',
-      classId: 'cls-1',
-      section: 'A',
-      teacherId: teachers[0]?.id || '',
+      courseId: firstCourse?.id || '',
+      classId: initialClassId,
+      section: targetClass?.sections[0] || 'A',
+      teacherId: firstCourse?.teacherId || teachers[0]?.id || '',
       day: 'Monday',
       startTime: '08:30',
       endTime: '10:30',
@@ -80,18 +97,35 @@ export const SchedulesView: React.FC = () => {
     setShowModal(true);
   };
 
+  const handleCourseChangeInModal = (courseId: string) => {
+    const courseObj = courses.find((c) => c.id === courseId);
+    if (courseObj) {
+      const clsObj = classes.find((c) => c.id === courseObj.classId || c.name === courseObj.classId);
+      setFormData((prev) => ({
+        ...prev,
+        courseId,
+        classId: courseObj.classId,
+        section: clsObj?.sections[0] || prev.section,
+        teacherId: courseObj.teacherId || prev.teacherId,
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, courseId }));
+    }
+  };
+
   const handleSubmitSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     setConflictError('');
 
     const courseObj = courses.find((c) => c.id === formData.courseId);
     const teacherObj = teachers.find((t) => t.id === formData.teacherId);
+    const classObj = classes.find((c) => c.id === formData.classId || c.name === formData.classId);
 
     const payload = {
       ...formData,
       courseCode: courseObj ? courseObj.code : 'CS',
       courseTitle: courseObj ? courseObj.title : 'Course',
-      className: formData.classId,
+      className: classObj ? classObj.name : formData.classId,
       teacherName: teacherObj ? teacherObj.name : 'Instructor',
     };
 
@@ -117,11 +151,41 @@ export const SchedulesView: React.FC = () => {
     }
   };
 
-  // Teachers see filtered timetable for their courses/classes
-  const visibleSchedules =
+  const [currentNow, setCurrentNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const dayOfWeekNames: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayDayName = dayOfWeekNames[currentNow.getDay()];
+  const currentHourMin = `${String(currentNow.getHours()).padStart(2, '0')}:${String(currentNow.getMinutes()).padStart(2, '0')}`;
+
+  // Role filtering: Teachers only see their assigned courses/classes; Admins, Dept Heads, and Coordinators have access to all 8 classes
+  const roleFilteredSchedules =
     user?.role === 'TEACHER'
       ? schedules.filter((s) => s.teacherId === user.id || s.teacherName === user.name)
       : schedules;
+
+  const visibleSchedules =
+    selectedClassFilter === 'ALL'
+      ? roleFilteredSchedules
+      : roleFilteredSchedules.filter((s) => s.classId === selectedClassFilter || s.className === selectedClassFilter);
+
+  // Find active ongoing class
+  const activeClassNow = visibleSchedules.find(
+    (s) => s.day === todayDayName && currentHourMin >= s.startTime && currentHourMin <= s.endTime
+  );
+
+  // Find next upcoming class today
+  const nextClassToday = visibleSchedules
+    .filter((s) => s.day === todayDayName && s.startTime > currentHourMin)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
+
+  // Find total assigned classes
+  const assignedClassesCount = new Set(visibleSchedules.map((s) => s.className)).size;
+  const currentFormClass = classes.find((c) => c.id === formData.classId || c.name === formData.classId);
 
   return (
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
@@ -133,7 +197,9 @@ export const SchedulesView: React.FC = () => {
             <span>{t('scheduleTitle')}</span>
           </h2>
           <p className="text-xs text-[#CBB39C] mt-1">
-            Weekly class timetable, classroom allocations, and instructor schedule management.
+            {user?.role === 'TEACHER'
+              ? `Personal teaching timetable for ${user.name} (${assignedClassesCount} classes assigned)`
+              : 'Weekly class timetable, classroom allocations, and instructor schedule management.'}
           </p>
         </div>
 
@@ -153,18 +219,143 @@ export const SchedulesView: React.FC = () => {
         )}
       </div>
 
-      {/* Weekly Timetable Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      {/* Teacher Entry Time Assistant Banner */}
+      {user?.role === 'TEACHER' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Active Class or Next Class Status */}
+          {activeClassNow ? (
+            <div className="p-4 rounded-2xl bg-emerald-950/70 border-2 border-emerald-500/70 text-white shadow-xl flex items-center gap-3.5 animate-pulse">
+              <div className="p-3 bg-emerald-500/20 text-emerald-300 rounded-xl">
+                <Clock className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] font-black uppercase rounded tracking-wider">
+                    {language === 'am' ? 'አሁን ክፍል ውስጥ መገኘት ያለብዎት' : 'In Session Now • Enter Class'}
+                  </span>
+                  <span className="text-xs text-emerald-300 font-bold">{activeClassNow.className}</span>
+                </div>
+                <h4 className="font-bold text-sm text-white mt-1">
+                  {activeClassNow.courseCode}: {activeClassNow.courseTitle}
+                </h4>
+                <div className="text-xs text-emerald-200/90 mt-0.5 flex flex-wrap items-center gap-2">
+                  <span>📍 {activeClassNow.room}</span>
+                  <span>•</span>
+                  <span>⏰ {activeClassNow.startTime} - {activeClassNow.endTime} ({formatTimeStringToEthiopian(activeClassNow.startTime, language)})</span>
+                </div>
+              </div>
+            </div>
+          ) : nextClassToday ? (
+            <div className="p-4 rounded-2xl bg-[#27140B] border border-[#F5A623]/60 text-white shadow-xl flex items-center gap-3.5">
+              <div className="p-3 bg-[#F5A623]/20 text-[#F5A623] rounded-xl">
+                <Clock className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-[#F5A623] text-[#1E0C04] text-[10px] font-black uppercase rounded tracking-wider">
+                    {language === 'am' ? 'ቀጣይ ክፍል ዛሬ' : 'Next Entry Today'}
+                  </span>
+                  <span className="text-xs text-[#FBB03B] font-bold">{nextClassToday.className} (Sec {nextClassToday.section})</span>
+                </div>
+                <h4 className="font-bold text-sm text-white mt-1">
+                  {nextClassToday.courseCode}: {nextClassToday.courseTitle}
+                </h4>
+                <div className="text-xs text-[#CBB39C] mt-0.5 flex flex-wrap items-center gap-2">
+                  <span>📍 {nextClassToday.room}</span>
+                  <span>•</span>
+                  <span>⏰ {nextClassToday.startTime} - {nextClassToday.endTime} ({formatTimeStringToEthiopian(nextClassToday.startTime, language)})</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 rounded-2xl bg-[#27140B] border border-[#522B17] text-white shadow-xl flex items-center gap-3.5">
+              <div className="p-3 bg-[#180B05] text-[#A68F7B] rounded-xl">
+                <CheckSquare className="w-6 h-6 text-[#F5A623]" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#F5A623]">
+                  {language === 'am' ? 'ዛሬ ቀሪ ክፍል የለዎትም' : 'No More Scheduled Classes for Today'}
+                </span>
+                <p className="text-xs text-[#CBB39C] mt-0.5">
+                  {language === 'am'
+                    ? `ለዛሬ (${dayLabels[todayDayName].am}) የታቀዱ ክፍሎች ተጠናቀዋል ወይም የሉም።`
+                    : `All scheduled teaching sessions for today (${todayDayName}) are done.`}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Stats on assigned courses and weekly schedule */}
+          <div className="p-4 rounded-2xl bg-[#27140B] border border-[#522B17] text-white shadow-xl flex items-center justify-between">
+            <div className="space-y-1 text-xs">
+              <div className="text-[#A68F7B] font-medium">{language === 'am' ? 'የተመደቡበት የትምህርት ክፍለ ጊዜያት' : 'Weekly Assigned Teaching Slots'}</div>
+              <div className="text-lg font-bold text-[#F5A623]">{visibleSchedules.length} {language === 'am' ? 'ክፍለ ጊዜያት በሳምንት' : 'Slots per week'}</div>
+              <div className="text-[11px] text-[#CBB39C]">
+                {language === 'am' ? 'የዛሬ ቀን:' : 'Today:'} <strong className="text-white">{dayLabels[todayDayName].am} ({todayDayName})</strong>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="px-3 py-1 bg-[#180B05] border border-[#522B17] rounded-xl text-xs font-mono text-[#F7E5C8]">
+                {formatTimeStringToEthiopian(currentHourMin, language)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Class Level Selector Bar (For Admins, Dept Heads, Coordinators) */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-[#27140B] p-3 sm:p-4 border border-[#522B17] rounded-2xl shadow-lg">
+        <div className="flex items-center gap-2 text-xs text-[#CBB39C]">
+          <Filter className="w-4 h-4 text-[#F5A623]" />
+          <span className="font-semibold">{language === 'am' ? 'የክፍል ማጣሪያ (8ቱም ክፍሎች)' : 'Class Level Filter (All 8 Classes):'}</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+          <button
+            onClick={() => setSelectedClassFilter('ALL')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
+              selectedClassFilter === 'ALL'
+                ? 'bg-[#E5921A] text-[#1E0C04] border-[#F5A623]'
+                : 'bg-[#180B05] text-[#CBB39C] border-[#522B17] hover:text-white'
+            }`}
+          >
+            {language === 'am' ? 'ሁሉም ክፍሎች (8)' : 'All Classes (8)'}
+          </button>
+          {classes.map((cls) => (
+            <button
+              key={cls.id}
+              onClick={() => setSelectedClassFilter(cls.id)}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition border ${
+                selectedClassFilter === cls.id
+                  ? 'bg-[#E5921A] text-[#1E0C04] border-[#F5A623]'
+                  : 'bg-[#180B05] text-[#CBB39C] border-[#522B17] hover:text-white'
+              }`}
+            >
+              {cls.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Weekly Timetable Grid - 7 Days (Mon - Sun) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
         {days.map((day) => {
           const daySchedules = visibleSchedules.filter((s) => s.day === day);
 
           return (
             <div
               key={day}
-              className="bg-[#27140B] border border-[#522B17] rounded-2xl shadow-xl overflow-hidden flex flex-col"
+              className={`bg-[#27140B] border rounded-2xl shadow-xl overflow-hidden flex flex-col ${
+                day === 'Sunday' ? 'border-[#F5A623]/40 ring-1 ring-[#F5A623]/20' : 'border-[#522B17]'
+              }`}
             >
-              <div className="p-3 bg-[#180B05] border-b border-[#4A2715] font-bold text-xs text-center text-[#F5A623] uppercase tracking-wider">
-                {day}
+              <div className={`p-3 border-b font-bold text-xs text-center uppercase tracking-wider flex items-center justify-center gap-1.5 ${
+                day === 'Sunday'
+                  ? 'bg-[#351909] border-[#F5A623]/40 text-[#FBB03B]'
+                  : 'bg-[#180B05] border-[#4A2715] text-[#F5A623]'
+              }`}>
+                <span>{language === 'am' ? dayLabels[day].am : dayLabels[day].en}</span>
+                {day === 'Sunday' && <span className="text-[10px] text-[#F5A623] font-normal">({language === 'am' ? 'ሰንበት' : 'Sun'})</span>}
               </div>
 
               <div className="p-3 space-y-3 flex-1 min-h-[220px]">
@@ -198,11 +389,14 @@ export const SchedulesView: React.FC = () => {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#F5A623]">
-                        <Clock className="w-3 h-3" />
-                        <span>
-                          {s.startTime} - {s.endTime}
-                        </span>
+                      <div className="flex flex-col gap-0.5 text-[10px] font-bold text-[#F5A623]">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3 h-3" />
+                          <span>{s.startTime} - {s.endTime}</span>
+                        </div>
+                        <div className="text-[10px] text-[#F7E5C8]/80 font-normal pl-4">
+                          {formatTimeStringToEthiopian(s.startTime, language)} - {formatTimeStringToEthiopian(s.endTime, language)}
+                        </div>
                       </div>
 
                       <h4 className="font-bold text-xs text-white">
@@ -247,21 +441,59 @@ export const SchedulesView: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmitSchedule} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-[#CBB39C] mb-1 font-semibold">Course</label>
-                <select
-                  required
-                  value={formData.courseId}
-                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
-                >
-                  <option value="">Select Course...</option>
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.code} — {c.title}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#CBB39C] mb-1 font-semibold">Course</label>
+                  <select
+                    required
+                    value={formData.courseId}
+                    onChange={(e) => handleCourseChangeInModal(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  >
+                    <option value="">Select Course...</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.code} — {c.title} ({c.classId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[#CBB39C] mb-1 font-semibold">Class & Section</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={formData.classId}
+                      onChange={(e) => {
+                        const targetCls = classes.find((c) => c.id === e.target.value);
+                        setFormData({
+                          ...formData,
+                          classId: e.target.value,
+                          section: targetCls?.sections[0] || 'A',
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                    >
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={formData.section}
+                      onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                      className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                    >
+                      {(currentFormClass?.sections || ['A', 'B', 'C']).map((sec) => (
+                        <option key={sec} value={sec}>
+                          Sec {sec}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -291,7 +523,7 @@ export const SchedulesView: React.FC = () => {
                   >
                     {days.map((d) => (
                       <option key={d} value={d}>
-                        {d}
+                        {d} ({dayLabels[d].am})
                       </option>
                     ))}
                   </select>

@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { AcademicClass, AttendanceRecord, AttendanceStatus, Student } from '../types';
+import { formatEthiopianDate, formatEthiopianDateTime } from '../utils/ethiopianCalendar';
+import { exportAttendanceToWord, exportAttendanceHistoryToWord } from '../utils/wordExport';
 import {
   UserCheck,
   Calendar,
@@ -15,6 +17,8 @@ import {
   Users,
   CheckCheck,
   Search,
+  FileText,
+  Download,
 } from 'lucide-react';
 
 export const AttendanceView: React.FC = () => {
@@ -55,12 +59,24 @@ export const AttendanceView: React.FC = () => {
   >({});
 
   useEffect(() => {
-    Promise.all([api.getClasses(), api.getStudents(), api.getAttendance()]).then(
-      ([clsRes, stdRes, attRes]) => {
+    Promise.all([api.getClasses(), api.getStudents(), api.getAttendance(), api.getCourses()]).then(
+      ([clsRes, stdRes, attRes, crsRes]) => {
         if (clsRes.success && clsRes.data.length > 0) {
-          setClasses(clsRes.data);
-          if (!selectedClassId) {
-            setSelectedClassId(clsRes.data[0].id);
+          let availableClasses = clsRes.data;
+          if (user?.role === 'TEACHER' && crsRes.success) {
+            const myCourses = crsRes.data.filter(
+              (c) => c.teacherId === user.id || c.teacherName === user.name
+            );
+            const myClassIds = new Set(myCourses.map((c) => c.classId));
+            const filtered = clsRes.data.filter((c) => myClassIds.has(c.id));
+            if (filtered.length > 0) {
+              availableClasses = filtered;
+            }
+          }
+
+          setClasses(availableClasses);
+          if (!selectedClassId && availableClasses.length > 0) {
+            setSelectedClassId(availableClasses[0].id);
           }
         }
         if (stdRes.success) {
@@ -71,14 +87,18 @@ export const AttendanceView: React.FC = () => {
         }
       }
     );
-  }, []);
+  }, [user]);
 
   const selectedClass = classes.find((c) => c.id === selectedClassId);
 
-  // Filter students for the selected class level
-  const classStudents = students.filter(
-    (s) => s.classId === selectedClassId || (selectedClass && s.className === selectedClass.name)
-  );
+  // Filter students for the selected class level (ordered alphabetically)
+  const classStudents = students
+    .filter((s) => s.classId === selectedClassId || (selectedClass && s.className === selectedClass.name))
+    .sort((a, b) => {
+      const nameA = `${a.firstName} ${a.lastName}`.trim().toLowerCase();
+      const nameB = `${b.firstName} ${b.lastName}`.trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   // Load existing attendance for selectedClassId + selectedDate if it exists
   useEffect(() => {
@@ -92,6 +112,12 @@ export const AttendanceView: React.FC = () => {
               status: e.status,
               remark: e.remark || '',
             };
+          });
+          // Ensure newly registered students get default status while existing stay unchanged
+          classStudents.forEach((std) => {
+            if (!entryMap[std.id]) {
+              entryMap[std.id] = { status: 'PRESENT', remark: '' };
+            }
           });
           setSheetEntries(entryMap);
         } else {
@@ -206,6 +232,80 @@ export const AttendanceView: React.FC = () => {
     }
   };
 
+  // Download Current Sheet as Word (.docx)
+  const handleDownloadCurrentWordDoc = () => {
+    if (!selectedClass) return;
+    const entries = classStudents.map((std) => ({
+      studentCode: std.studentId,
+      studentName: `${std.firstName} ${std.lastName}`,
+      studentAmharicName: std.amharicName,
+      status: sheetEntries[std.id]?.status || 'PRESENT',
+      remark: sheetEntries[std.id]?.remark || '',
+    }));
+
+    exportAttendanceToWord({
+      className: selectedClass.name,
+      classAmharicName: selectedClass.amharicName,
+      date: selectedDate,
+      recordedBy: user?.name || 'Class Teacher',
+      entries,
+      summary: {
+        total: totalStudents,
+        present: presentCount,
+        absent: absentCount,
+        late: lateCount,
+        excused: excusedCount,
+        rate: attendanceRate,
+      },
+      language: t('amharic') === 'አማርኛ' ? 'am' : 'en',
+    });
+  };
+
+  // Download Single History Record as Word (.docx)
+  const handleDownloadHistoryLogWordDoc = (rec: AttendanceRecord) => {
+    if (!selectedClass) return;
+    const pCount = rec.entries.filter((e) => e.status === 'PRESENT').length;
+    const aCount = rec.entries.filter((e) => e.status === 'ABSENT').length;
+    const lCount = rec.entries.filter((e) => e.status === 'LATE').length;
+    const eCount = rec.entries.filter((e) => e.status === 'EXCUSED').length;
+    const total = rec.entries.length;
+    const rate = total > 0 ? Math.round(((pCount + lCount) / total) * 100) : 0;
+
+    exportAttendanceToWord({
+      className: selectedClass.name,
+      classAmharicName: selectedClass.amharicName,
+      date: rec.date,
+      recordedBy: rec.takenByUserName || user?.name || 'Teacher',
+      entries: rec.entries.map((e) => ({
+        studentCode: e.studentCode,
+        studentName: e.studentName,
+        studentAmharicName: e.studentAmharicName,
+        status: e.status,
+        remark: e.remark,
+      })),
+      summary: {
+        total,
+        present: pCount,
+        absent: aCount,
+        late: lCount,
+        excused: eCount,
+        rate,
+      },
+      language: t('amharic') === 'አማርኛ' ? 'am' : 'en',
+    });
+  };
+
+  // Download All History Logs as Word (.docx)
+  const handleDownloadAllHistoryWordDoc = () => {
+    if (!selectedClass || historyForClass.length === 0) return;
+    exportAttendanceHistoryToWord({
+      className: selectedClass.name,
+      classAmharicName: selectedClass.amharicName,
+      historyRecords: historyForClass,
+      language: t('amharic') === 'አማርኛ' ? 'am' : 'en',
+    });
+  };
+
   // Historical Attendance Filtered for selectedClass
   const historyForClass = attendanceRecords.filter((a) => a.classId === selectedClassId);
 
@@ -260,6 +360,10 @@ export const AttendanceView: React.FC = () => {
                 {t('amharic') === 'አማርኛ' ? 'ዛሬ' : 'Today'}
               </button>
             )}
+          </div>
+          {/* Ethiopian Date Badge */}
+          <div className="flex items-center gap-1.5 bg-[#351909] border border-[#F5A623]/40 rounded-xl px-3 py-1.5 text-xs text-[#FBB03B] font-bold shadow">
+            <span>🇪🇹 {formatEthiopianDate(selectedDate, t('amharic') === 'አማርኛ' ? 'am' : 'en', true)}</span>
           </div>
         </div>
       </div>
@@ -367,8 +471,8 @@ export const AttendanceView: React.FC = () => {
                 />
               </div>
 
-              {/* Quick Bulk Actions */}
-              <div className="flex items-center gap-2">
+              {/* Quick Bulk Actions & Word Export */}
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[#CBB39C] font-semibold hidden sm:inline">Bulk Actions:</span>
                 <button
                   type="button"
@@ -385,6 +489,16 @@ export const AttendanceView: React.FC = () => {
                 >
                   <XCircle className="w-3.5 h-3.5" />
                   <span>Mark All Absent</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadCurrentWordDoc}
+                  disabled={classStudents.length === 0}
+                  className="px-3 py-1 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#F5A623]/50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow"
+                  title="Download Current Attendance Sheet as Microsoft Word .docx"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span>{t('exportWord')}</span>
                 </button>
               </div>
             </div>
@@ -497,21 +611,33 @@ export const AttendanceView: React.FC = () => {
               </table>
             </div>
 
-            {/* Bottom Save Action */}
+            {/* Bottom Save Action & Word Export */}
             <div className="p-4 bg-[#180B05] border-t border-[#4A2715] flex flex-col sm:flex-row justify-between items-center gap-3">
               <span className="text-xs text-[#CBB39C]">
-                Date: <strong className="text-white">{selectedDate}</strong> • Class: <strong className="text-[#F5A623]">{selectedClass?.name}</strong>
+                {t('amharic') === 'አማርኛ' ? 'ቀን' : 'Date'}: <strong className="text-white">{formatEthiopianDate(selectedDate, t('amharic') === 'አማርኛ' ? 'am' : 'en', true)}</strong> ({selectedDate}) • {t('amharic') === 'አማርኛ' ? 'ክፍል' : 'Class'}: <strong className="text-[#F5A623]">{selectedClass?.name}</strong>
               </span>
 
-              <button
-                type="button"
-                disabled={saving || classStudents.length === 0}
-                onClick={handleSaveAttendance}
-                className="px-6 py-2.5 bg-[#E5921A] hover:bg-[#FBB03B] text-[#1E0C04] font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save Attendance Record</span>
-              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleDownloadCurrentWordDoc}
+                  disabled={classStudents.length === 0}
+                  className="px-4 py-2.5 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#5C321B] hover:border-[#F5A623] font-bold text-xs rounded-xl shadow transition flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4 text-[#F5A623]" />
+                  <span>{t('exportWord')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={saving || classStudents.length === 0}
+                  onClick={handleSaveAttendance}
+                  className="px-6 py-2.5 bg-[#E5921A] hover:bg-[#FBB03B] text-[#1E0C04] font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save Attendance Record</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -519,10 +645,23 @@ export const AttendanceView: React.FC = () => {
         /* Historical Attendance Tab */
         <div className="space-y-4">
           <div className="bg-[#27140B] border border-[#522B17] rounded-2xl shadow-xl p-4 sm:p-6 space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-[#4A2715] pb-3">
-              <History className="w-5 h-5 text-[#F5A623]" />
-              <span>Historical Attendance Logs ({selectedClass?.name})</span>
-            </h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#4A2715] pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <History className="w-5 h-5 text-[#F5A623]" />
+                <span>Historical Attendance Logs ({selectedClass?.name})</span>
+              </h3>
+
+              {historyForClass.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDownloadAllHistoryWordDoc}
+                  className="px-3 py-1.5 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#F5A623]/50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span>{t('amharic') === 'አማርኛ' ? 'ሁሉንም በ Word (.docx) አውርድ' : 'Download All History (.docx)'}</span>
+                </button>
+              )}
+            </div>
 
             {historyForClass.length === 0 ? (
               <div className="p-8 text-center text-xs text-[#CBB39C] bg-[#180B05]/50 border border-[#522B17] rounded-xl">
@@ -545,9 +684,9 @@ export const AttendanceView: React.FC = () => {
                       <div>
                         <div className="font-bold text-white text-sm flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-[#F5A623]" />
-                          <span>Date: {rec.date}</span>
+                          <span>{t('amharic') === 'አማርኛ' ? 'ቀን' : 'Date'}: {formatEthiopianDate(rec.date, t('amharic') === 'አማርኛ' ? 'am' : 'en', true)}</span>
                           <span className="text-[11px] text-[#CBB39C] font-normal">
-                            (Taken by: {rec.takenByUserName})
+                            ({rec.date} • {t('amharic') === 'አማርኛ' ? 'የመዘገበው' : 'Taken by'}: {rec.takenByUserName})
                           </span>
                         </div>
 
@@ -563,6 +702,16 @@ export const AttendanceView: React.FC = () => {
                         <span className="px-3 py-1 bg-[#27140B] text-[#F5A623] border border-[#522B17] rounded-lg font-bold text-xs">
                           Rate: {rate}%
                         </span>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadHistoryLogWordDoc(rec)}
+                          className="px-3 py-1.5 bg-[#27140B] hover:bg-[#351909] text-[#F7E5C8] border border-[#5C321B] hover:border-[#F5A623] rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow"
+                          title="Download this date log as Microsoft Word .docx"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-[#F5A623]" />
+                          <span>Word (.docx)</span>
+                        </button>
                       </div>
                     </div>
                   );

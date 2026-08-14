@@ -121,7 +121,13 @@ export const MarkEntryView: React.FC = () => {
     );
   }
 
-  const courseStudents = students.filter((s) => s.classId === selectedCourse.classId);
+  const courseStudents = students
+    .filter((s) => s.classId === selectedCourse.classId)
+    .sort((a, b) => {
+      const nameA = `${a.firstName} ${a.lastName}`.trim().toLowerCase();
+      const nameB = `${b.firstName} ${b.lastName}`.trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   // Maximum total possible score across all active columns
   const maxTotalScore = activeColumns.reduce((acc, col) => acc + Number(col.maxMark || 0), 0);

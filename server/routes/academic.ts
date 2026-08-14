@@ -1,11 +1,21 @@
 import { Router, Request, Response } from 'express';
-import { academicClasses, academicYears, courses, schedules, students } from '../store/state';
+import { academicClasses, defaultEightClasses, academicYears, courses, schedules, students } from '../store/state';
 import { dbSaveDoc, dbDeleteDoc } from '../db/firebase';
 
 const router = Router();
 
 // Academic Classes
-router.get('/classes', (req: Request, res: Response) => {
+router.get('/classes', async (req: Request, res: Response) => {
+  if (academicClasses.length < 8) {
+    const existingClassIds = new Set(academicClasses.map((c: any) => c.id));
+    for (const defClass of defaultEightClasses) {
+      if (!existingClassIds.has(defClass.id)) {
+        academicClasses.push(defClass);
+        await dbSaveDoc('academicClasses', defClass.id, defClass);
+      }
+    }
+    academicClasses.sort((a: any, b: any) => (a.level || 0) - (b.level || 0));
+  }
   res.json({ success: true, data: academicClasses });
 });
 

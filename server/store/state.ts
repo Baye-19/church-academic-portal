@@ -71,16 +71,18 @@ export let users: any[] = [
 
 export let academicYears: string[] = ['2024/2025', '2025/2026', '2026/2027', '2027/2028'];
 
-export let academicClasses: any[] = [
-  { id: 'cls-1', name: 'Class 1', amharicName: 'ደረጃ 1', level: 1, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
-  { id: 'cls-2', name: 'Class 2', amharicName: 'ደረጃ 2', level: 2, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
-  { id: 'cls-3', name: 'Class 3', amharicName: 'ደረጃ 3', level: 3, academicYear: '2025/2026', sections: ['A', 'B', 'C'], semesters: ['Semester I', 'Semester II'] },
-  { id: 'cls-4', name: 'Class 4', amharicName: 'ደረጃ 4', level: 4, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
-  { id: 'cls-5', name: 'Class 5', amharicName: 'ደረጃ 5', level: 5, academicYear: '2025/2026', sections: ['A'], semesters: ['Semester I', 'Semester II'] },
-  { id: 'cls-6', name: 'Class 6', amharicName: 'ደረጃ 6', level: 6, academicYear: '2025/2026', sections: ['A'], semesters: ['Semester I', 'Semester II'] },
-  { id: 'cls-7', name: 'Class 7', amharicName: 'ደረጃ 7', level: 7, academicYear: '2025/2026', sections: ['A'], semesters: ['Semester I', 'Semester II'] },
-  { id: 'cls-8', name: 'Class 8', amharicName: 'ደረጃ 8', level: 8, academicYear: '2025/2026', sections: ['A'], semesters: ['Semester I', 'Semester II'] },
+export const defaultEightClasses: any[] = [
+  { id: 'cls-1', name: 'Medebe Lukas', amharicName: 'ምደባ ሉቃስ', level: 1, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
+  { id: 'cls-2', name: 'Medebe Matewos', amharicName: 'ምደባ ማቴዎስ', level: 2, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
+  { id: 'cls-3', name: 'Medebe Markos', amharicName: 'ምደባ ማርቆስ', level: 3, academicYear: '2025/2026', sections: ['A', 'B', 'C'], semesters: ['Semester I', 'Semester II'] },
+  { id: 'cls-4', name: 'Medebe Yohannes', amharicName: 'ምደባ ዮሐንስ', level: 4, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
+  { id: 'cls-5', name: 'Medebe Pawlos', amharicName: 'ምደባ ጳውሎስ', level: 5, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
+  { id: 'cls-6', name: 'Medebe Petros', amharicName: 'ምደባ ጴጥሮስ', level: 6, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
+  { id: 'cls-7', name: 'Medebe Estifanos', amharicName: 'ምደባ እስጢፋኖስ', level: 7, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
+  { id: 'cls-8', name: 'Medebe Dawit', amharicName: 'ምደባ ዳዊት', level: 8, academicYear: '2025/2026', sections: ['A', 'B'], semesters: ['Semester I', 'Semester II'] },
 ];
+
+export let academicClasses: any[] = [...defaultEightClasses];
 
 export let courses: any[] = [
   {
@@ -197,85 +199,183 @@ export let courses: any[] = [
     maxFinal: 50,
     status: 'ACTIVE',
   },
+  {
+    id: 'crs-301',
+    code: 'GE101',
+    title: "Ge'ez Language & Grammar",
+    amharicTitle: 'የግዕዝ ቋንቋ እና ሰዋሰው',
+    creditHours: 3,
+    classId: 'cls-5',
+    semester: 'Semester I',
+    academicYear: '2025/2026',
+    teacherId: 'usr-3',
+    teacherName: 'Instructor Abebe Kebede',
+    coordinatorId: 'usr-5',
+    coordinatorName: 'Coordinator Dawit Bekele',
+    maxAssignment: 20,
+    maxQuiz: 10,
+    maxMidterm: 20,
+    maxFinal: 50,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'crs-302',
+    code: 'CH101',
+    title: 'Church History & Tradition',
+    amharicTitle: 'የቤተክርስቲያን ታሪክ እና ትውፊት',
+    creditHours: 3,
+    classId: 'cls-6',
+    semester: 'Semester I',
+    academicYear: '2025/2026',
+    teacherId: 'usr-4',
+    teacherName: 'Instructor Tigist Haile',
+    coordinatorId: 'usr-5',
+    coordinatorName: 'Coordinator Dawit Bekele',
+    maxAssignment: 20,
+    maxQuiz: 10,
+    maxMidterm: 20,
+    maxFinal: 50,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'crs-401',
+    code: 'NT101',
+    title: 'New Testament Exegesis',
+    amharicTitle: 'የአዲስ ኪዳን ትርጓሜ',
+    creditHours: 3,
+    classId: 'cls-7',
+    semester: 'Semester I',
+    academicYear: '2025/2026',
+    teacherId: 'usr-3',
+    teacherName: 'Instructor Abebe Kebede',
+    coordinatorId: 'usr-5',
+    coordinatorName: 'Coordinator Dawit Bekele',
+    maxAssignment: 20,
+    maxQuiz: 10,
+    maxMidterm: 20,
+    maxFinal: 50,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'crs-402',
+    code: 'PT101',
+    title: 'Pastoral Theology & Hymnody',
+    amharicTitle: 'የሥርዓተ አምልኮ እና ዜማ ጥናት',
+    creditHours: 3,
+    classId: 'cls-8',
+    semester: 'Semester I',
+    academicYear: '2025/2026',
+    teacherId: 'usr-4',
+    teacherName: 'Instructor Tigist Haile',
+    coordinatorId: 'usr-5',
+    coordinatorName: 'Coordinator Dawit Bekele',
+    maxAssignment: 20,
+    maxQuiz: 10,
+    maxMidterm: 20,
+    maxFinal: 50,
+    status: 'ACTIVE',
+  },
 ];
 
-export let students: any[] = [
-  {
-    id: 'std-1',
-    studentId: 'ST-2026-001',
-    firstName: 'Abebe',
-    lastName: 'Girma',
-    amharicName: 'አበበ ግርማ',
-    gender: 'Male',
-    email: 'abebe.girma@student.amras.edu',
-    phone: '+251 922 111111',
-    classId: 'cls-1',
-    className: 'Class 1',
-    section: 'A',
-    academicYear: '2025/2026',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'std-2',
-    studentId: 'ST-2026-002',
-    firstName: 'Hana',
-    lastName: 'Alemu',
-    amharicName: 'ሃና አለሙ',
-    gender: 'Female',
-    email: 'hana.alemu@student.amras.edu',
-    phone: '+251 922 222222',
-    classId: 'cls-1',
-    className: 'Class 1',
-    section: 'A',
-    academicYear: '2025/2026',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'std-3',
-    studentId: 'ST-2026-003',
-    firstName: 'Kebede',
-    lastName: 'Mulugeta',
-    amharicName: 'ከበደ ሙሉጌታ',
-    gender: 'Male',
-    email: 'kebede.m@student.amras.edu',
-    phone: '+251 922 333333',
-    classId: 'cls-1',
-    className: 'Class 1',
-    section: 'A',
-    academicYear: '2025/2026',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'std-4',
-    studentId: 'ST-2026-004',
-    firstName: 'Makeda',
-    lastName: 'Taye',
-    amharicName: 'ማክዳ ታዬ',
-    gender: 'Female',
-    email: 'makeda.t@student.amras.edu',
-    phone: '+251 922 444444',
-    classId: 'cls-1',
-    className: 'Class 1',
-    section: 'B',
-    academicYear: '2025/2026',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'std-5',
-    studentId: 'ST-2026-005',
-    firstName: 'Yonas',
-    lastName: 'Kassa',
-    amharicName: 'ዮናስ ካሣ',
-    gender: 'Male',
-    email: 'yonas.k@student.amras.edu',
-    phone: '+251 922 555555',
-    classId: 'cls-2',
-    className: 'Class 2',
-    section: 'A',
-    academicYear: '2025/2026',
-    status: 'ACTIVE',
-  },
+export const defaultEightyStudents: any[] = [
+  // Class 1: Medebe Lukas (cls-1)
+  { id: 'std-1', studentId: 'ST-2026-001', firstName: 'Abebe', lastName: 'Girma', amharicName: 'አበበ ግርማ', gender: 'Male', email: 'abebe.girma@student.amras.edu', phone: '+251 911 234501', classId: 'cls-1', className: 'Medebe Lukas', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-2', studentId: 'ST-2026-002', firstName: 'Hana', lastName: 'Alemu', amharicName: 'ሃና አለሙ', gender: 'Female', email: 'hana.alemu@student.amras.edu', phone: '+251 911 234502', classId: 'cls-1', className: 'Medebe Lukas', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-3', studentId: 'ST-2026-003', firstName: 'Kebede', lastName: 'Mulugeta', amharicName: 'ከበደ ሙሉጌታ', gender: 'Male', email: 'kebede.mulugeta@student.amras.edu', phone: '+251 911 234503', classId: 'cls-1', className: 'Medebe Lukas', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-4', studentId: 'ST-2026-004', firstName: 'Makeda', lastName: 'Taye', amharicName: 'ማክዳ ታዬ', gender: 'Female', email: 'makeda.taye@student.amras.edu', phone: '+251 911 234504', classId: 'cls-1', className: 'Medebe Lukas', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-5', studentId: 'ST-2026-005', firstName: 'Yared', lastName: 'Tadesse', amharicName: 'ያሬድ ታደሰ', gender: 'Male', email: 'yared.tadesse@student.amras.edu', phone: '+251 911 234505', classId: 'cls-1', className: 'Medebe Lukas', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-6', studentId: 'ST-2026-006', firstName: 'Selamawit', lastName: 'Belay', amharicName: 'ሰላማዊት በላይ', gender: 'Female', email: 'selamawit.belay@student.amras.edu', phone: '+251 911 234506', classId: 'cls-1', className: 'Medebe Lukas', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-7', studentId: 'ST-2026-007', firstName: 'Biruk', lastName: 'Assefa', amharicName: 'ብሩክ አሰፋ', gender: 'Male', email: 'biruk.assefa@student.amras.edu', phone: '+251 911 234507', classId: 'cls-1', className: 'Medebe Lukas', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-8', studentId: 'ST-2026-008', firstName: 'Hiwot', lastName: 'Hailu', amharicName: 'ሕይወት ኃይሉ', gender: 'Female', email: 'hiwot.hailu@student.amras.edu', phone: '+251 911 234508', classId: 'cls-1', className: 'Medebe Lukas', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-9', studentId: 'ST-2026-009', firstName: 'Dawit', lastName: 'Mengistu', amharicName: 'ዳዊት መንግሥቱ', gender: 'Male', email: 'dawit.mengistu@student.amras.edu', phone: '+251 911 234509', classId: 'cls-1', className: 'Medebe Lukas', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-10', studentId: 'ST-2026-010', firstName: 'Bethlehem', lastName: 'Tesfaye', amharicName: 'ቤተልሔም ተስፋዬ', gender: 'Female', email: 'bethlehem.tesfaye@student.amras.edu', phone: '+251 911 234510', classId: 'cls-1', className: 'Medebe Lukas', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+
+  // Class 2: Medebe Matewos (cls-2)
+  { id: 'std-11', studentId: 'ST-2026-011', firstName: 'Yonas', lastName: 'Kassa', amharicName: 'ዮናስ ካሣ', gender: 'Male', email: 'yonas.kassa@student.amras.edu', phone: '+251 911 234511', classId: 'cls-2', className: 'Medebe Matewos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-12', studentId: 'ST-2026-012', firstName: 'Rahel', lastName: 'Desta', amharicName: 'ራሔል ደስታ', gender: 'Female', email: 'rahel.desta@student.amras.edu', phone: '+251 911 234512', classId: 'cls-2', className: 'Medebe Matewos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-13', studentId: 'ST-2026-013', firstName: 'Ermias', lastName: 'Solomon', amharicName: 'ኤርሚያስ ሰሎሞን', gender: 'Male', email: 'ermias.solomon@student.amras.edu', phone: '+251 911 234513', classId: 'cls-2', className: 'Medebe Matewos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-14', studentId: 'ST-2026-014', firstName: 'Mahlet', lastName: 'Worku', amharicName: 'ማኅሌት ወርቁ', gender: 'Female', email: 'mahlet.worku@student.amras.edu', phone: '+251 911 234514', classId: 'cls-2', className: 'Medebe Matewos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-15', studentId: 'ST-2026-015', firstName: 'Samuel', lastName: 'Tefera', amharicName: 'ሳሙኤል ተፈራ', gender: 'Male', email: 'samuel.tefera@student.amras.edu', phone: '+251 911 234515', classId: 'cls-2', className: 'Medebe Matewos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-16', studentId: 'ST-2026-016', firstName: 'Frehiwot', lastName: 'Negash', amharicName: 'ፍሬሕይወት ነጋሽ', gender: 'Female', email: 'frehiwot.negash@student.amras.edu', phone: '+251 911 234516', classId: 'cls-2', className: 'Medebe Matewos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-17', studentId: 'ST-2026-017', firstName: 'Natnael', lastName: 'Gizaw', amharicName: 'ናትናኤል ግዛው', gender: 'Male', email: 'natnael.gizaw@student.amras.edu', phone: '+251 911 234517', classId: 'cls-2', className: 'Medebe Matewos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-18', studentId: 'ST-2026-018', firstName: 'Tsion', lastName: 'Getachew', amharicName: 'ጽዮን ጌታቸው', gender: 'Female', email: 'tsion.getachew@student.amras.edu', phone: '+251 911 234518', classId: 'cls-2', className: 'Medebe Matewos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-19', studentId: 'ST-2026-019', firstName: 'Henok', lastName: 'Berhanu', amharicName: 'ሄኖክ ብርሃኑ', gender: 'Male', email: 'henok.berhanu@student.amras.edu', phone: '+251 911 234519', classId: 'cls-2', className: 'Medebe Matewos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-20', studentId: 'ST-2026-020', firstName: 'Eden', lastName: 'Melaku', amharicName: 'ኤደን መላኩ', gender: 'Female', email: 'eden.melaku@student.amras.edu', phone: '+251 911 234520', classId: 'cls-2', className: 'Medebe Matewos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+
+  // Class 3: Medebe Markos (cls-3)
+  { id: 'std-21', studentId: 'ST-2026-021', firstName: 'Daniel', lastName: 'Mekonnen', amharicName: 'ዳንኤል መኮንን', gender: 'Male', email: 'daniel.mekonnen@student.amras.edu', phone: '+251 911 234521', classId: 'cls-3', className: 'Medebe Markos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-22', studentId: 'ST-2026-022', firstName: 'Meron', lastName: 'Zeleke', amharicName: 'ሜሮን ዘለቀ', gender: 'Female', email: 'meron.zeleke@student.amras.edu', phone: '+251 911 234522', classId: 'cls-3', className: 'Medebe Markos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-23', studentId: 'ST-2026-023', firstName: 'Yohannes', lastName: 'Gebre', amharicName: 'ዮሐንስ ገብሬ', gender: 'Male', email: 'yohannes.gebre@student.amras.edu', phone: '+251 911 234523', classId: 'cls-3', className: 'Medebe Markos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-24', studentId: 'ST-2026-024', firstName: 'Ruth', lastName: 'Fikru', amharicName: 'ሩት ፍቅሩ', gender: 'Female', email: 'ruth.fikru@student.amras.edu', phone: '+251 911 234524', classId: 'cls-3', className: 'Medebe Markos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-25', studentId: 'ST-2026-025', firstName: 'Abiy', lastName: 'Demisse', amharicName: 'አብይ ደሚሴ', gender: 'Male', email: 'abiy.demisse@student.amras.edu', phone: '+251 911 234525', classId: 'cls-3', className: 'Medebe Markos', section: 'C', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-26', studentId: 'ST-2026-026', firstName: 'Kalkidan', lastName: 'Tilahun', amharicName: 'ቃልኪዳን ጥላሁን', gender: 'Female', email: 'kalkidan.tilahun@student.amras.edu', phone: '+251 911 234526', classId: 'cls-3', className: 'Medebe Markos', section: 'C', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-27', studentId: 'ST-2026-027', firstName: 'Tewodros', lastName: 'Kassahun', amharicName: 'ቴዎድሮስ ካሳሁን', gender: 'Male', email: 'tewodros.kassahun@student.amras.edu', phone: '+251 911 234527', classId: 'cls-3', className: 'Medebe Markos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-28', studentId: 'ST-2026-028', firstName: 'Genet', lastName: 'Wolde', amharicName: 'ገነት ወልዴ', gender: 'Female', email: 'genet.wolde@student.amras.edu', phone: '+251 911 234528', classId: 'cls-3', className: 'Medebe Markos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-29', studentId: 'ST-2026-029', firstName: 'Michael', lastName: 'Hailemariam', amharicName: 'ሚካኤል ኃይለማርያም', gender: 'Male', email: 'michael.hailemariam@student.amras.edu', phone: '+251 911 234529', classId: 'cls-3', className: 'Medebe Markos', section: 'C', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-30', studentId: 'ST-2026-030', firstName: 'Senait', lastName: 'Shibeshi', amharicName: 'ሰናይት ሽበሺ', gender: 'Female', email: 'senait.shibeshi@student.amras.edu', phone: '+251 911 234530', classId: 'cls-3', className: 'Medebe Markos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+
+  // Class 4: Medebe Yohannes (cls-4)
+  { id: 'std-31', studentId: 'ST-2026-031', firstName: 'Eyob', lastName: 'Mesfin', amharicName: 'ኢዮብ መስፍን', gender: 'Male', email: 'eyob.mesfin@student.amras.edu', phone: '+251 911 234531', classId: 'cls-4', className: 'Medebe Yohannes', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-32', studentId: 'ST-2026-032', firstName: 'Marta', lastName: 'Bogale', amharicName: 'ማርታ ቦጋለ', gender: 'Female', email: 'marta.bogale@student.amras.edu', phone: '+251 911 234532', classId: 'cls-4', className: 'Medebe Yohannes', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-33', studentId: 'ST-2026-033', firstName: 'Fasil', lastName: 'Asrat', amharicName: 'ፋሲል አስራት', gender: 'Male', email: 'fasil.asrat@student.amras.edu', phone: '+251 911 234533', classId: 'cls-4', className: 'Medebe Yohannes', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-34', studentId: 'ST-2026-034', firstName: 'Samrawit', lastName: 'Abebaw', amharicName: 'ሳምራዊት አበበው', gender: 'Female', email: 'samrawit.abebaw@student.amras.edu', phone: '+251 911 234534', classId: 'cls-4', className: 'Medebe Yohannes', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-35', studentId: 'ST-2026-035', firstName: 'Bereket', lastName: 'Wondimu', amharicName: 'በረከት ወንድሙ', gender: 'Male', email: 'bereket.wondimu@student.amras.edu', phone: '+251 911 234535', classId: 'cls-4', className: 'Medebe Yohannes', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-36', studentId: 'ST-2026-036', firstName: 'Tigist', lastName: 'Lemma', amharicName: 'ትዕግስት ለማ', gender: 'Female', email: 'tigist.lemma@student.amras.edu', phone: '+251 911 234536', classId: 'cls-4', className: 'Medebe Yohannes', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-37', studentId: 'ST-2026-037', firstName: 'Nahom', lastName: 'Fantahun', amharicName: 'ናሆም ፋንታሁን', gender: 'Male', email: 'nahom.fantahun@student.amras.edu', phone: '+251 911 234537', classId: 'cls-4', className: 'Medebe Yohannes', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-38', studentId: 'ST-2026-038', firstName: 'Blen', lastName: 'Teshome', amharicName: 'ብሌን ተሾመ', gender: 'Female', email: 'blen.teshome@student.amras.edu', phone: '+251 911 234538', classId: 'cls-4', className: 'Medebe Yohannes', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-39', studentId: 'ST-2026-039', firstName: 'Surafel', lastName: 'Bekele', amharicName: 'ሱራፌል በቀለ', gender: 'Male', email: 'surafel.bekele@student.amras.edu', phone: '+251 911 234539', classId: 'cls-4', className: 'Medebe Yohannes', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-40', studentId: 'ST-2026-040', firstName: 'Lidya', lastName: 'Aklilu', amharicName: 'ሊዲያ አክሊሉ', gender: 'Female', email: 'lidya.aklilu@student.amras.edu', phone: '+251 911 234540', classId: 'cls-4', className: 'Medebe Yohannes', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+
+  // Class 5: Medebe Pawlos (cls-5)
+  { id: 'std-41', studentId: 'ST-2026-041', firstName: 'Ezra', lastName: 'Cherinet', amharicName: 'ዕዝራ ቸርነት', gender: 'Male', email: 'ezra.cherinet@student.amras.edu', phone: '+251 911 234541', classId: 'cls-5', className: 'Medebe Pawlos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-42', studentId: 'ST-2026-042', firstName: 'Saron', lastName: 'Gashaw', amharicName: 'ሳሮን ጋሻው', gender: 'Female', email: 'saron.gashaw@student.amras.edu', phone: '+251 911 234542', classId: 'cls-5', className: 'Medebe Pawlos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-43', studentId: 'ST-2026-043', firstName: 'Elias', lastName: 'Yilma', amharicName: 'ኤልያስ ይልማ', gender: 'Male', email: 'elias.yilma@student.amras.edu', phone: '+251 911 234543', classId: 'cls-5', className: 'Medebe Pawlos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-44', studentId: 'ST-2026-044', firstName: 'Helina', lastName: 'Sisay', amharicName: 'ሄሊና ሲሳይ', gender: 'Female', email: 'helina.sisay@student.amras.edu', phone: '+251 911 234544', classId: 'cls-5', className: 'Medebe Pawlos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-45', studentId: 'ST-2026-045', firstName: 'Kirubel', lastName: 'Hailu', amharicName: 'ኪሩቤል ኃይሉ', gender: 'Male', email: 'kirubel.hailu@student.amras.edu', phone: '+251 911 234545', classId: 'cls-5', className: 'Medebe Pawlos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-46', studentId: 'ST-2026-046', firstName: 'Martha', lastName: 'Dagnachew', amharicName: 'ማርታ ዳኛቸው', gender: 'Female', email: 'martha.dagnachew@student.amras.edu', phone: '+251 911 234546', classId: 'cls-5', className: 'Medebe Pawlos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-47', studentId: 'ST-2026-047', firstName: 'Robel', lastName: 'Yohannes', amharicName: 'ሮቤል ዮሐንስ', gender: 'Male', email: 'robel.yohannes@student.amras.edu', phone: '+251 911 234547', classId: 'cls-5', className: 'Medebe Pawlos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-48', studentId: 'ST-2026-048', firstName: 'Feven', lastName: 'Kifle', amharicName: 'ፌቨን ክፍሌ', gender: 'Female', email: 'feven.kifle@student.amras.edu', phone: '+251 911 234548', classId: 'cls-5', className: 'Medebe Pawlos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-49', studentId: 'ST-2026-049', firstName: 'Abel', lastName: 'Shimelis', amharicName: 'አቤል ሽመልስ', gender: 'Male', email: 'abel.shimelis@student.amras.edu', phone: '+251 911 234549', classId: 'cls-5', className: 'Medebe Pawlos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-50', studentId: 'ST-2026-050', firstName: 'Hermela', lastName: 'Tariku', amharicName: 'ሄርሜላ ታሪኩ', gender: 'Female', email: 'hermela.tariku@student.amras.edu', phone: '+251 911 234550', classId: 'cls-5', className: 'Medebe Pawlos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+
+  // Class 6: Medebe Petros (cls-6)
+  { id: 'std-51', studentId: 'ST-2026-051', firstName: 'Petros', lastName: 'Gebremichael', amharicName: 'ጴጥሮስ ገብረሚካኤል', gender: 'Male', email: 'petros.gebremichael@student.amras.edu', phone: '+251 911 234551', classId: 'cls-6', className: 'Medebe Petros', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-52', studentId: 'ST-2026-052', firstName: 'Kidist', lastName: 'Tsegaye', amharicName: 'ቅድስት ፀጋዬ', gender: 'Female', email: 'kidist.tsegaye@student.amras.edu', phone: '+251 911 234552', classId: 'cls-6', className: 'Medebe Petros', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-53', studentId: 'ST-2026-053', firstName: 'Binyam', lastName: 'Ayalew', amharicName: 'ቢንያም አያሌው', gender: 'Male', email: 'binyam.ayalew@student.amras.edu', phone: '+251 911 234553', classId: 'cls-6', className: 'Medebe Petros', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-54', studentId: 'ST-2026-054', firstName: 'Meklit', lastName: 'Endale', amharicName: 'መክሊት እንዳለ', gender: 'Female', email: 'meklit.endale@student.amras.edu', phone: '+251 911 234554', classId: 'cls-6', className: 'Medebe Petros', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-55', studentId: 'ST-2026-055', firstName: 'Desta', lastName: 'Wubetu', amharicName: 'ደስታ ውበቱ', gender: 'Male', email: 'desta.wubetu@student.amras.edu', phone: '+251 911 234555', classId: 'cls-6', className: 'Medebe Petros', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-56', studentId: 'ST-2026-056', firstName: 'Arsema', lastName: 'Haile', amharicName: 'አርሴማ ኃይሌ', gender: 'Female', email: 'arsema.haile@student.amras.edu', phone: '+251 911 234556', classId: 'cls-6', className: 'Medebe Petros', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-57', studentId: 'ST-2026-057', firstName: 'Temesgen', lastName: 'Aseged', amharicName: 'ተመስገን አሰገደ', gender: 'Male', email: 'temesgen.aseged@student.amras.edu', phone: '+251 911 234557', classId: 'cls-6', className: 'Medebe Petros', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-58', studentId: 'ST-2026-058', firstName: 'Aster', lastName: 'Girma', amharicName: 'አስቴር ግርማ', gender: 'Female', email: 'aster.girma@student.amras.edu', phone: '+251 911 234558', classId: 'cls-6', className: 'Medebe Petros', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-59', studentId: 'ST-2026-059', firstName: 'Samson', lastName: 'Mulatu', amharicName: 'ሳምሶን ሙላቱ', gender: 'Male', email: 'samson.mulatu@student.amras.edu', phone: '+251 911 234559', classId: 'cls-6', className: 'Medebe Petros', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-60', studentId: 'ST-2026-060', firstName: 'Danawit', lastName: 'Fisseha', amharicName: 'ዳናዊት ፍስሐ', gender: 'Female', email: 'danawit.fisseha@student.amras.edu', phone: '+251 911 234560', classId: 'cls-6', className: 'Medebe Petros', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+
+  // Class 7: Medebe Estifanos (cls-7)
+  { id: 'std-61', studentId: 'ST-2026-061', firstName: 'Estifanos', lastName: 'Tekle', amharicName: 'እስጢፋኖስ ተክሌ', gender: 'Male', email: 'estifanos.tekle@student.amras.edu', phone: '+251 911 234561', classId: 'cls-7', className: 'Medebe Estifanos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-62', studentId: 'ST-2026-062', firstName: 'Sara', lastName: 'Woldekidan', amharicName: 'ሳራ ወልደኪዳን', gender: 'Female', email: 'sara.woldekidan@student.amras.edu', phone: '+251 911 234562', classId: 'cls-7', className: 'Medebe Estifanos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-63', studentId: 'ST-2026-063', firstName: 'Zerihun', lastName: 'Alebachew', amharicName: 'ዘሪሁን አለባቸው', gender: 'Male', email: 'zerihun.alebachew@student.amras.edu', phone: '+251 911 234563', classId: 'cls-7', className: 'Medebe Estifanos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-64', studentId: 'ST-2026-064', firstName: 'Eyerusalem', lastName: 'Guta', amharicName: 'ኢየሩሳሌም ጉታ', gender: 'Female', email: 'eyerusalem.guta@student.amras.edu', phone: '+251 911 234564', classId: 'cls-7', className: 'Medebe Estifanos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-65', studentId: 'ST-2026-065', firstName: 'Habtamu', lastName: 'Bizuneh', amharicName: 'ሀብታሙ ብዙነህ', gender: 'Male', email: 'habtamu.bizuneh@student.amras.edu', phone: '+251 911 234565', classId: 'cls-7', className: 'Medebe Estifanos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-66', studentId: 'ST-2026-066', firstName: 'Melat', lastName: 'Kebede', amharicName: 'መላት ከበደ', gender: 'Female', email: 'melat.kebede@student.amras.edu', phone: '+251 911 234566', classId: 'cls-7', className: 'Medebe Estifanos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-67', studentId: 'ST-2026-067', firstName: 'Getnet', lastName: 'Amare', amharicName: 'ጌትነት አማረ', gender: 'Male', email: 'getnet.amare@student.amras.edu', phone: '+251 911 234567', classId: 'cls-7', className: 'Medebe Estifanos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-68', studentId: 'ST-2026-068', firstName: 'Rahel', lastName: 'Gebretsadik', amharicName: 'ራሔል ገብረጻድቅ', gender: 'Female', email: 'rahel.gebretsadik@student.amras.edu', phone: '+251 911 234568', classId: 'cls-7', className: 'Medebe Estifanos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-69', studentId: 'ST-2026-069', firstName: 'Solomon', lastName: 'Ashenafi', amharicName: 'ሰሎሞን አሸናፊ', gender: 'Male', email: 'solomon.ashenafi@student.amras.edu', phone: '+251 911 234569', classId: 'cls-7', className: 'Medebe Estifanos', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-70', studentId: 'ST-2026-070', firstName: 'Deborah', lastName: 'Yohannes', amharicName: 'ዲቦራ ዮሐንስ', gender: 'Female', email: 'deborah.yohannes@student.amras.edu', phone: '+251 911 234570', classId: 'cls-7', className: 'Medebe Estifanos', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+
+  // Class 8: Medebe Dawit (cls-8)
+  { id: 'std-71', studentId: 'ST-2026-071', firstName: 'Dawit', lastName: 'Woldegiorgis', amharicName: 'ዳዊት ወልደጊዮርጊስ', gender: 'Male', email: 'dawit.woldegiorgis@student.amras.edu', phone: '+251 911 234571', classId: 'cls-8', className: 'Medebe Dawit', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-72', studentId: 'ST-2026-072', firstName: 'Mariamawit', lastName: 'Tadesse', amharicName: 'ማርያማዊት ታደሰ', gender: 'Female', email: 'mariamawit.tadesse@student.amras.edu', phone: '+251 911 234572', classId: 'cls-8', className: 'Medebe Dawit', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-73', studentId: 'ST-2026-073', firstName: 'Yonatan', lastName: 'Birhanu', amharicName: 'ዮናታን ብርሃኑ', gender: 'Male', email: 'yonatan.birhanu@student.amras.edu', phone: '+251 911 234573', classId: 'cls-8', className: 'Medebe Dawit', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-74', studentId: 'ST-2026-074', firstName: 'Tinsae', lastName: 'Mengistu', amharicName: 'ትንሣኤ መንግሥቱ', gender: 'Female', email: 'tinsae.mengistu@student.amras.edu', phone: '+251 911 234574', classId: 'cls-8', className: 'Medebe Dawit', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-75', studentId: 'ST-2026-075', firstName: 'Yohannes', lastName: 'Tesfahun', amharicName: 'ዮሐንስ ተስፋሁን', gender: 'Male', email: 'yohannes.tesfahun@student.amras.edu', phone: '+251 911 234575', classId: 'cls-8', className: 'Medebe Dawit', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-76', studentId: 'ST-2026-076', firstName: 'Ruth', lastName: 'Getu', amharicName: 'ሩት ጌቱ', gender: 'Female', email: 'ruth.getu@student.amras.edu', phone: '+251 911 234576', classId: 'cls-8', className: 'Medebe Dawit', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-77', studentId: 'ST-2026-077', firstName: 'Mikiyas', lastName: 'Negussie', amharicName: 'ሚኪያስ ንጉሴ', gender: 'Male', email: 'mikiyas.negussie@student.amras.edu', phone: '+251 911 234577', classId: 'cls-8', className: 'Medebe Dawit', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-78', studentId: 'ST-2026-078', firstName: 'Eleni', lastName: 'Mulu', amharicName: 'እሌኒ ሙሉ', gender: 'Female', email: 'eleni.mulu@student.amras.edu', phone: '+251 911 234578', classId: 'cls-8', className: 'Medebe Dawit', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-79', studentId: 'ST-2026-079', firstName: 'Fikadu', lastName: 'Workneh', amharicName: 'ፍቃዱ ወርቅነህ', gender: 'Male', email: 'fikadu.workneh@student.amras.edu', phone: '+251 911 234579', classId: 'cls-8', className: 'Medebe Dawit', section: 'A', academicYear: '2025/2026', status: 'ACTIVE' },
+  { id: 'std-80', studentId: 'ST-2026-080', firstName: 'Hawi', lastName: 'Dibaba', amharicName: 'ሀዊ ዲባባ', gender: 'Female', email: 'hawi.dibaba@student.amras.edu', phone: '+251 911 234580', classId: 'cls-8', className: 'Medebe Dawit', section: 'B', academicYear: '2025/2026', status: 'ACTIVE' },
 ];
+
+export let students: any[] = [...defaultEightyStudents];
 
 export let marks: any[] = [
   {
@@ -536,6 +636,36 @@ export let schedules: any[] = [
     endTime: '10:30',
     room: 'Lab 103',
   },
+  {
+    id: 'sch-4',
+    courseId: 'crs-101',
+    courseCode: 'DOGMA-1',
+    courseTitle: 'Dogmatic Theology & Church History',
+    classId: 'cls-1',
+    className: 'Class 1',
+    section: 'A',
+    teacherId: 'usr-3',
+    teacherName: 'Instructor Abebe Kebede',
+    day: 'Sunday',
+    startTime: '09:00',
+    endTime: '11:00',
+    room: 'Hall A (Sunday Main)',
+  },
+  {
+    id: 'sch-5',
+    courseId: 'crs-102',
+    courseCode: 'LITURGY-1',
+    courseTitle: 'Biblical Studies & Liturgy',
+    classId: 'cls-2',
+    className: 'Class 2',
+    section: 'A',
+    teacherId: 'usr-4',
+    teacherName: 'Instructor Tigist Haile',
+    day: 'Sunday',
+    startTime: '11:30',
+    endTime: '13:30',
+    room: 'Hall B (Sunday)',
+  },
 ];
 
 export let auditLogs: any[] = [
@@ -695,7 +825,21 @@ export async function initFirestoreData() {
       }
 
       const dbClasses = await dbGetCollection('academicClasses');
-      if (dbClasses.length > 0) academicClasses = dbClasses;
+      if (dbClasses && dbClasses.length > 0) {
+        const existingClassIds = new Set(dbClasses.map((c: any) => c.id));
+        const mergedClasses = [...dbClasses];
+        for (const defClass of defaultEightClasses) {
+          if (!existingClassIds.has(defClass.id)) {
+            mergedClasses.push(defClass);
+            await dbSaveDoc('academicClasses', defClass.id, defClass);
+          }
+        }
+        mergedClasses.sort((a: any, b: any) => (a.level || 0) - (b.level || 0));
+        academicClasses = mergedClasses;
+      } else {
+        academicClasses = [...defaultEightClasses];
+        for (const c of academicClasses) await dbSaveDoc('academicClasses', c.id, c);
+      }
 
       const dbYears = await dbGetCollection('academicYears');
       if (dbYears.length > 0) academicYears = dbYears.map((y: any) => y.year || y.id);
@@ -704,7 +848,20 @@ export async function initFirestoreData() {
       if (dbCourses.length > 0) courses = dbCourses;
 
       const dbStudents = await dbGetCollection('students');
-      if (dbStudents.length > 0) students = dbStudents;
+      if (dbStudents && dbStudents.length > 0) {
+        const existingStudentIds = new Set(dbStudents.map((s: any) => s.id));
+        const mergedStudents = [...dbStudents];
+        for (const defStd of defaultEightyStudents) {
+          if (!existingStudentIds.has(defStd.id)) {
+            mergedStudents.push(defStd);
+            await dbSaveDoc('students', defStd.id, defStd);
+          }
+        }
+        students = mergedStudents;
+      } else {
+        students = [...defaultEightyStudents];
+        for (const st of students) await dbSaveDoc('students', st.id, st);
+      }
 
       const dbMarks = await dbGetCollection('marks');
       if (dbMarks.length > 0) marks = dbMarks;

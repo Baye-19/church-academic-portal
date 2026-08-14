@@ -94,8 +94,6 @@ const MainAppContent: React.FC = () => {
       <Header
         onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
-        onGoBack={handleGoBack}
-        canGoBack={activeTab !== 'dashboard'}
       />
 
       {/* Main Workspace Layout */}

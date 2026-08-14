@@ -1,187 +1,682 @@
-/**
- * Utility to export tables and student report cards directly as Microsoft Word (.docx / .doc) files.
- */
+import {
+  Document,
+  Packer,
+  Paragraph,
+  Table,
+  TableRow,
+  TableCell,
+  TextRun,
+  AlignmentType,
+  WidthType,
+  BorderStyle,
+  ShadingType,
+  convertInchesToTwip,
+} from 'docx';
+import { formatEthiopianDate } from './ethiopianCalendar';
 
-export const exportToWordDoc = (filename: string, title: string, subtitle: string, htmlContent: string) => {
-  const docHtml = `
-<html xmlns:o='urn:schemas-microsoft-office:office' xmlns:w='urn:schemas-microsoft-office:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-  <meta charset='utf-8'>
-  <title>${title}</title>
-  <style>
-    @page {
-      size: A4 portrait;
-      margin: 20mm 15mm 20mm 15mm;
-    }
-    body {
-      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
-      color: #1a1a1a;
-      line-height: 1.4;
-      padding: 0;
-      margin: 0;
-    }
-    .header-table {
-      width: 100%;
-      border-bottom: 2px solid #5B2C16;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-    }
-    .header-title {
-      font-family: 'Georgia', 'Times New Roman', serif;
-      font-size: 18pt;
-      font-weight: bold;
-      color: #5B2C16;
-      text-align: center;
-    }
-    .header-subtitle {
-      font-size: 11pt;
-      color: #666;
-      text-align: center;
-      margin-top: 4px;
-    }
-    .doc-title {
-      font-family: 'Georgia', serif;
-      font-size: 14pt;
-      font-weight: bold;
-      color: #333;
-      text-align: center;
-      margin: 15px 0 10px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .meta-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 15px;
-      background-color: #fcf9f5;
-      border: 1px solid #e0d0c0;
-    }
-    .meta-table td {
-      padding: 8px 12px;
-      font-size: 10pt;
-      border: 1px solid #e0d0c0;
-    }
-    .meta-label {
-      font-weight: bold;
-      color: #5B2C16;
-      width: 20%;
-    }
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      margin-bottom: 20px;
-    }
-    .data-table th {
-      background-color: #5B2C16;
-      color: #ffffff;
-      padding: 8px 10px;
-      border: 1px solid #3d1c0c;
-      font-size: 10pt;
-      font-weight: bold;
-      text-align: left;
-    }
-    .data-table td {
-      padding: 7px 10px;
-      border: 1px solid #dcdcdc;
-      font-size: 9.5pt;
-    }
-    .data-table tr:nth-child(even) {
-      background-color: #fbf9f6;
-    }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .font-bold { font-weight: bold; }
-    .grade-badge {
-      display: inline-block;
-      padding: 2px 6px;
-      font-weight: bold;
-      border-radius: 3px;
-      background-color: #f3ebdf;
-      color: #5B2C16;
-    }
-    .signatures {
-      margin-top: 40px;
-      width: 100%;
-    }
-    .signatures td {
-      width: 50%;
-      vertical-align: top;
-      font-size: 10pt;
-      border: none;
-    }
-    .sig-line {
-      border-top: 1px dashed #666;
-      margin-top: 45px;
-      padding-top: 5px;
-      font-weight: bold;
-      color: #333;
-    }
-    .footer-note {
-      margin-top: 30px;
-      font-size: 8pt;
-      color: #888;
-      text-align: center;
-      border-top: 1px solid #eee;
-      padding-top: 8px;
-    }
-  </style>
-</head>
-<body>
-  <div class="header-table">
-    <div class="header-title">ሐይመተ አብርሃም ሰንበት ትምህርት ቤት</div>
-    <div class="header-subtitle">Haymete Abraham Sunday School Academic Management Portal</div>
-    <div class="doc-title">${title}</div>
-    ${subtitle ? `<div style="text-align:center; font-size:10pt; color:#666;">${subtitle}</div>` : ''}
-  </div>
-
-  ${htmlContent}
-
-  <div class="footer-note">
-    Generated automatically on ${new Date().toLocaleDateString('en-US', { dateStyle: 'full' })} — Official School Record
-  </div>
-</body>
-</html>
-  `;
-
-  const blob = new Blob(['\ufeff', docHtml], {
-    type: 'application/msword',
-  });
+// Helper to trigger browser download of a generated Docx Blob
+async function saveDocxBlob(doc: Document, filename: string) {
+  const blob = await Packer.toBlob(doc);
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = filename.endsWith('.doc') || filename.endsWith('.docx') ? filename : `${filename}.docx`;
+  link.download = filename.endsWith('.docx') ? filename : `${filename}.docx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+// Common Table Borders
+const standardBorder = {
+  style: BorderStyle.SINGLE,
+  size: 1,
+  color: 'D0C0B0',
 };
 
-export const exportTableToWord = (
-  filename: string,
-  title: string,
-  headers: string[],
-  rows: (string | number)[][]
-) => {
-  const tableHtml = `
-    <table class="data-table">
-      <thead>
-        <tr>
-          ${headers.map((h) => `<th>${h}</th>`).join('')}
-        </tr>
-      </thead>
-      <tbody>
-        ${rows
-          .map(
-            (row) => `
-          <tr>
-            ${row.map((cell) => `<td>${cell}</td>`).join('')}
-          </tr>`
-          )
-          .join('')}
-      </tbody>
-    </table>
-  `;
-
-  exportToWordDoc(filename, title, '', tableHtml);
+const cellBorders = {
+  top: standardBorder,
+  bottom: standardBorder,
+  left: standardBorder,
+  right: standardBorder,
 };
+
+const noBorder = {
+  style: BorderStyle.NONE,
+  size: 0,
+  color: 'FFFFFF',
+};
+
+const transparentBorders = {
+  top: noBorder,
+  bottom: noBorder,
+  left: noBorder,
+  right: noBorder,
+};
+
+// Common Header creation
+function createChurchHeader(title: string, subtitle?: string): Paragraph[] {
+  const paragraphs: Paragraph[] = [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 60 },
+      children: [
+        new TextRun({
+          text: 'ሐይመተ አብርሃም ሰንበት ትምህርት ቤት',
+          bold: true,
+          size: 32, // 16pt
+          color: '5B2C16',
+          font: 'Arial',
+        }),
+      ],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 120 },
+      children: [
+        new TextRun({
+          text: 'Haymete Abraham Sunday School Academic Management Portal',
+          bold: true,
+          size: 20, // 10pt
+          color: '8C502E',
+          font: 'Arial',
+        }),
+      ],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: subtitle ? 80 : 180 },
+      children: [
+        new TextRun({
+          text: title,
+          bold: true,
+          size: 24, // 12pt
+          color: '27140B',
+          font: 'Arial',
+        }),
+      ],
+    }),
+  ];
+
+  if (subtitle) {
+    paragraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 180 },
+        children: [
+          new TextRun({
+            text: subtitle,
+            italics: true,
+            size: 19, // 9.5pt
+            color: '666666',
+            font: 'Arial',
+          }),
+        ],
+      })
+    );
+  }
+
+  return paragraphs;
+}
+
+// Common Footer note
+function createFooterParagraph(): Paragraph {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 240 },
+    children: [
+      new TextRun({
+        text: `Generated automatically on ${formatEthiopianDate(new Date(), 'am')} (${formatEthiopianDate(new Date(), 'en')}) — Official Sunday School Record`,
+        italics: true,
+        size: 16,
+        color: '888888',
+        font: 'Arial',
+      }),
+    ],
+  });
+}
+
+// Signatures block table
+function createSignaturesTable(): Table {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: transparentBorders,
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            borders: transparentBorders,
+            children: [
+              new Paragraph({
+                spacing: { before: 200, after: 300 },
+                children: [
+                  new TextRun({
+                    text: 'የክፍሉ መምህር / Class Teacher:',
+                    bold: true,
+                    size: 19,
+                    color: '27140B',
+                  }),
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: 'ፊርማ (Signature): _____________________  ቀን (Date): ____________',
+                    size: 18,
+                    color: '555555',
+                  }),
+                ],
+              }),
+            ],
+          }),
+          new TableCell({
+            width: { size: 50, type: WidthType.PERCENTAGE },
+            borders: transparentBorders,
+            children: [
+              new Paragraph({
+                spacing: { before: 200, after: 300 },
+                children: [
+                  new TextRun({
+                    text: 'የትምህርት ክፍል ኃላፊ / Academic Head:',
+                    bold: true,
+                    size: 19,
+                    color: '27140B',
+                  }),
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: 'ፊርማ (Signature): _____________________  ማህተም (Seal): _________',
+                    size: 18,
+                    color: '555555',
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+/**
+ * 1. Export Daily Attendance Sheet to Word (.docx)
+ */
+export async function exportAttendanceToWord(params: {
+  className: string;
+  classAmharicName?: string;
+  date: string;
+  recordedBy: string;
+  entries: {
+    studentCode: string;
+    studentName: string;
+    studentAmharicName?: string;
+    status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+    remark?: string;
+  }[];
+  summary: {
+    total: number;
+    present: number;
+    absent: number;
+    late: number;
+    excused: number;
+    rate: number;
+  };
+  language?: 'en' | 'am';
+}) {
+  const { className, classAmharicName, date, recordedBy, entries, summary, language = 'am' } = params;
+  const ethiopianDate = formatEthiopianDate(date, language, true);
+
+  const metaTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: cellBorders,
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 20, type: WidthType.PERCENTAGE },
+            shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: 'ክፍል / Class:', bold: true, size: 19, color: '5B2C16' })] })],
+          }),
+          new TableCell({
+            width: { size: 30, type: WidthType.PERCENTAGE },
+            borders: cellBorders,
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${className} ${classAmharicName ? `(${classAmharicName})` : ''}`,
+                    bold: true,
+                    size: 19,
+                    color: '111111',
+                  }),
+                ],
+              }),
+            ],
+          }),
+          new TableCell({
+            width: { size: 20, type: WidthType.PERCENTAGE },
+            shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: 'ቀን / Date:', bold: true, size: 19, color: '5B2C16' })] })],
+          }),
+          new TableCell({
+            width: { size: 30, type: WidthType.PERCENTAGE },
+            borders: cellBorders,
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `${ethiopianDate} `, bold: true, size: 19 }),
+                  new TextRun({ text: `(${date})`, size: 17, color: '666666' }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      new TableRow({
+        children: [
+          new TableCell({
+            shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: 'የመዘገበው / Recorded By:', bold: true, size: 19, color: '5B2C16' })] })],
+          }),
+          new TableCell({
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: recordedBy || 'Academic Teacher', size: 19 })] })],
+          }),
+          new TableCell({
+            shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: 'የመገኘት መጠን / Rate:', bold: true, size: 19, color: '5B2C16' })] })],
+          }),
+          new TableCell({
+            borders: cellBorders,
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `${summary.rate}%`, bold: true, size: 20, color: '5B2C16' }),
+                  new TextRun({ text: ` (${summary.present + summary.late}/${summary.total} Attended)`, size: 17, color: '555555' }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      new TableRow({
+        children: [
+          new TableCell({
+            shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: 'ስታቲስቲክስ / Summary:', bold: true, size: 19, color: '5B2C16' })] })],
+          }),
+          new TableCell({
+            columnSpan: 3,
+            borders: cellBorders,
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Present: ${summary.present}  •  `, bold: true, color: '155724', size: 19 }),
+                  new TextRun({ text: `Absent: ${summary.absent}  •  `, bold: true, color: '721C24', size: 19 }),
+                  new TextRun({ text: `Late: ${summary.late}  •  `, bold: true, color: '856404', size: 19 }),
+                  new TextRun({ text: `Excused: ${summary.excused}  •  `, bold: true, color: '004085', size: 19 }),
+                  new TextRun({ text: `Total: ${summary.total}`, bold: true, color: '27140B', size: 19 }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+
+  // Table Headers
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: [
+      new TableCell({
+        width: { size: 6, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '#', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 16, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ children: [new TextRun({ text: 'Student ID', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 38, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ children: [new TextRun({ text: 'Student Full Name (የተማሪው ስም)', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 20, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Status / መገኘት', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 20, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ children: [new TextRun({ text: 'Remarks / ማስታወሻ', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+    ],
+  });
+
+  // Ensure entries are sorted alphabetically by student name
+  const sortedEntries = [...entries].sort((a, b) => {
+    const nameA = (a.studentName || '').toLowerCase();
+    const nameB = (b.studentName || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
+  // Table Data Rows
+  const dataRows = sortedEntries.map((entry, index) => {
+    let statusText = 'Present / ተገኝቷል';
+    let statusColor = '155724';
+    let statusBg = 'E8F5E9';
+
+    if (entry.status === 'ABSENT') {
+      statusText = 'Absent / ቀርቷል';
+      statusColor = '721C24';
+      statusBg = 'FFEBEE';
+    } else if (entry.status === 'LATE') {
+      statusText = 'Late / ዘግይቷል';
+      statusColor = '856404';
+      statusBg = 'FFF8E1';
+    } else if (entry.status === 'EXCUSED') {
+      statusText = 'Excused / ፈቃድ';
+      statusColor = '004085';
+      statusBg = 'E3F2FD';
+    }
+
+    const rowBg = index % 2 === 1 ? 'FAF8F5' : 'FFFFFF';
+
+    return new TableRow({
+      children: [
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${index + 1}`, size: 18, color: '666666' })] })],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ children: [new TextRun({ text: entry.studentCode, bold: true, size: 18, color: '5B2C16' })] })],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: entry.studentName, bold: true, size: 18 }),
+                ...(entry.studentAmharicName ? [new TextRun({ text: ` (${entry.studentAmharicName})`, size: 17, color: '666666' })] : []),
+              ],
+            }),
+          ],
+        }),
+        new TableCell({
+          shading: { fill: statusBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [new TextRun({ text: statusText, bold: true, size: 17, color: statusColor })],
+            }),
+          ],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ children: [new TextRun({ text: entry.remark || '-', size: 17, color: '444444' })] })],
+        }),
+      ],
+    });
+  });
+
+  const attendanceTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: cellBorders,
+    rows: [headerRow, ...dataRows],
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(0.7),
+              right: convertInchesToTwip(0.7),
+              bottom: convertInchesToTwip(0.7),
+              left: convertInchesToTwip(0.7),
+            },
+          },
+        },
+        children: [
+          ...createChurchHeader(
+            'የተማሪዎች ዕለታዊ የመገኘት መመዝገቢያ ቅጽ / Daily Attendance Register',
+            `${className} ${classAmharicName ? `(${classAmharicName})` : ''} — ${ethiopianDate} (${date})`
+          ),
+          metaTable,
+          new Paragraph({ spacing: { before: 140, after: 100 }, children: [] }),
+          attendanceTable,
+          new Paragraph({ spacing: { before: 140, after: 100 }, children: [] }),
+          createSignaturesTable(),
+          createFooterParagraph(),
+        ],
+      },
+    ],
+  });
+
+  const safeClassName = className.replace(/[^a-zA-Z0-9]/g, '_');
+  const filename = `Attendance_${safeClassName}_${date}.docx`;
+  await saveDocxBlob(doc, filename);
+}
+
+/**
+ * 2. Export Multi-Day Historical Attendance Logs to Word (.docx)
+ */
+export async function exportAttendanceHistoryToWord(params: {
+  className: string;
+  classAmharicName?: string;
+  historyRecords: {
+    date: string;
+    takenByUserName: string;
+    entries: {
+      studentCode: string;
+      studentName: string;
+      status: string;
+    }[];
+  }[];
+  language?: 'en' | 'am';
+}) {
+  const { className, classAmharicName, historyRecords, language = 'am' } = params;
+
+  const metaTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: cellBorders,
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: 'ክፍል / Class:', bold: true, size: 19, color: '5B2C16' })] })],
+          }),
+          new TableCell({
+            width: { size: 35, type: WidthType.PERCENTAGE },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: `${className} ${classAmharicName ? `(${classAmharicName})` : ''}`, bold: true, size: 19 })] })],
+          }),
+          new TableCell({
+            width: { size: 20, type: WidthType.PERCENTAGE },
+            shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: 'ጠቅላላ መዝገቦች / Total Logs:', bold: true, size: 19, color: '5B2C16' })] })],
+          }),
+          new TableCell({
+            width: { size: 20, type: WidthType.PERCENTAGE },
+            borders: cellBorders,
+            children: [new Paragraph({ children: [new TextRun({ text: `${historyRecords.length} Days Recorded`, bold: true, size: 19 })] })],
+          }),
+        ],
+      }),
+    ],
+  });
+
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: [
+      new TableCell({
+        width: { size: 6, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '#', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 24, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ children: [new TextRun({ text: 'ቀን / Date', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 22, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ children: [new TextRun({ text: 'የመዘገበው / Recorded By', bold: true, color: 'FFFFFF', size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 10, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Present', bold: true, color: 'FFFFFF', size: 17 })] })],
+      }),
+      new TableCell({
+        width: { size: 10, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Absent', bold: true, color: 'FFFFFF', size: 17 })] })],
+      }),
+      new TableCell({
+        width: { size: 10, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Late', bold: true, color: 'FFFFFF', size: 17 })] })],
+      }),
+      new TableCell({
+        width: { size: 18, type: WidthType.PERCENTAGE },
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Attendance Rate', bold: true, color: 'FFFFFF', size: 17 })] })],
+      }),
+    ],
+  });
+
+  const dataRows = historyRecords.map((rec, index) => {
+    const pCount = rec.entries.filter((e) => e.status === 'PRESENT').length;
+    const aCount = rec.entries.filter((e) => e.status === 'ABSENT').length;
+    const lCount = rec.entries.filter((e) => e.status === 'LATE').length;
+    const total = rec.entries.length;
+    const rate = total > 0 ? Math.round(((pCount + lCount) / total) * 100) : 0;
+    const ethDate = formatEthiopianDate(rec.date, language, true);
+
+    const rowBg = index % 2 === 1 ? 'FAF8F5' : 'FFFFFF';
+
+    return new TableRow({
+      children: [
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${index + 1}`, size: 18, color: '666666' })] })],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: ethDate, bold: true, size: 18 }),
+                new TextRun({ text: ` (${rec.date})`, size: 16, color: '666666' }),
+              ],
+            }),
+          ],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ children: [new TextRun({ text: rec.takenByUserName || 'Academic Teacher', size: 18 })] })],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${pCount}`, bold: true, color: '155724', size: 18 })] })],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${aCount}`, bold: true, color: '721C24', size: 18 })] })],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${lCount}`, bold: true, color: '856404', size: 18 })] })],
+        }),
+        new TableCell({
+          shading: { fill: 'F9F5F0', type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${rate}%`, bold: true, color: '5B2C16', size: 19 })] })],
+        }),
+      ],
+    });
+  });
+
+  const historyTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: cellBorders,
+    rows: [headerRow, ...dataRows],
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(0.7),
+              right: convertInchesToTwip(0.7),
+              bottom: convertInchesToTwip(0.7),
+              left: convertInchesToTwip(0.7),
+            },
+          },
+        },
+        children: [
+          ...createChurchHeader(
+            'የተማሪዎች የመገኘት ታሪክ ማጠቃለያ ሪፖርት / Attendance History Summary Report',
+            `${className} ${classAmharicName ? `(${classAmharicName})` : ''} — Complete Records`
+          ),
+          metaTable,
+          new Paragraph({ spacing: { before: 140, after: 100 }, children: [] }),
+          historyTable,
+          new Paragraph({ spacing: { before: 140, after: 100 }, children: [] }),
+          createSignaturesTable(),
+          createFooterParagraph(),
+        ],
+      },
+    ],
+  });
+
+  const safeClassName = className.replace(/[^a-zA-Z0-9]/g, '_');
+  const filename = `Attendance_History_${safeClassName}.docx`;
+  await saveDocxBlob(doc, filename);
+}

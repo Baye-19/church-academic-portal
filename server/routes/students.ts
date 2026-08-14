@@ -1,12 +1,28 @@
 import { Router, Request, Response } from 'express';
-import { students, setStudents } from '../store/state';
+import { students, defaultEightyStudents, setStudents } from '../store/state';
 import { dbSaveDoc, dbDeleteDoc } from '../db/firebase';
 
 const router = Router();
 
 // Students List
-router.get('/', (req: Request, res: Response) => {
-  res.json({ success: true, data: students });
+router.get('/', async (req: Request, res: Response) => {
+  if (students.length < 80) {
+    const existingStudentIds = new Set(students.map((s) => s.id));
+    for (const defStd of defaultEightyStudents) {
+      if (!existingStudentIds.has(defStd.id)) {
+        students.push(defStd);
+        await dbSaveDoc('students', defStd.id, defStd);
+      }
+    }
+  }
+
+  const sortedStudents = [...students].sort((a, b) => {
+    const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase();
+    const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
+  res.json({ success: true, data: sortedStudents });
 });
 
 // Create Student

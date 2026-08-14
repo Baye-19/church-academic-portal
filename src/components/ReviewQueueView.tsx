@@ -4,10 +4,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { Mark, SubmissionReview } from '../types';
 import { CheckSquare, CheckCircle, XCircle, Eye, AlertCircle, MessageSquare } from 'lucide-react';
+import { formatEthiopianDateTime } from '../utils/ethiopianCalendar';
 
 export const ReviewQueueView: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [submissions, setSubmissions] = useState<SubmissionReview[]>([]);
   const [selectedSub, setSelectedSub] = useState<SubmissionReview | null>(null);
@@ -98,10 +99,10 @@ export const ReviewQueueView: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-slate-400 pt-1">
-                  <span>Submitted by: <strong className="text-slate-200">{sub.teacherName}</strong></span>
-                  <span>Students: <strong className="text-slate-200">{sub.studentCount}</strong></span>
-                  <span>Date: {new Date(sub.submittedAt).toLocaleDateString()}</span>
+                <div className="flex flex-wrap items-center gap-4 text-xs text-[#CBB39C] pt-1">
+                  <span>{language === 'am' ? 'ያስገባው መምህር' : 'Submitted by'}: <strong className="text-white">{sub.teacherName}</strong></span>
+                  <span>{language === 'am' ? 'ተማሪዎች' : 'Students'}: <strong className="text-white">{sub.studentCount}</strong></span>
+                  <span>{language === 'am' ? 'ቀን' : 'Date'}: <strong className="text-[#F5A623]">{formatEthiopianDateTime(sub.submittedAt, language)}</strong></span>
                 </div>
 
                 {sub.rejectionReason && (

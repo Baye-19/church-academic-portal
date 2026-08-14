@@ -39,15 +39,21 @@ export const StudentsView: React.FC = () => {
     loadData();
   }, []);
 
-  const filteredStudents = students.filter((s) => {
-    const matchesSearch =
-      s.firstName.toLowerCase().includes(search.toLowerCase()) ||
-      s.lastName.toLowerCase().includes(search.toLowerCase()) ||
-      s.studentId.toLowerCase().includes(search.toLowerCase()) ||
-      s.amharicName.includes(search);
-    const matchesClass = selectedClass === 'all' || s.classId === selectedClass;
-    return matchesSearch && matchesClass;
-  });
+  const filteredStudents = students
+    .filter((s) => {
+      const matchesSearch =
+        s.firstName.toLowerCase().includes(search.toLowerCase()) ||
+        s.lastName.toLowerCase().includes(search.toLowerCase()) ||
+        s.studentId.toLowerCase().includes(search.toLowerCase()) ||
+        s.amharicName.includes(search);
+      const matchesClass = selectedClass === 'all' || s.classId === selectedClass;
+      return matchesSearch && matchesClass;
+    })
+    .sort((a, b) => {
+      const nameA = `${a.firstName} ${a.lastName}`.trim().toLowerCase();
+      const nameB = `${b.firstName} ${b.lastName}`.trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   const totalPages = Math.ceil(filteredStudents.length / PAGE_SIZE) || 1;
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);

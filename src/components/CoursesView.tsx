@@ -13,6 +13,7 @@ export const CoursesView: React.FC = () => {
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string>('ALL');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
@@ -67,8 +68,19 @@ export const CoursesView: React.FC = () => {
   const coordinators = users.filter((u) => u.role === 'COORDINATOR' || u.role === 'DEPT_HEAD');
   const canManageCourses = user?.role === 'ADMIN' || user?.role === 'COORDINATOR' || user?.role === 'DEPT_HEAD';
 
-  // Teachers see all or filtered courses with priority tag
-  const filteredCourses = courses.filter(
+  // For TEACHER role: Only show courses assigned to this specific teacher in their assigned class
+  // For ADMIN, DEPT_HEAD, COORDINATOR: Full access to all courses across all 8 classes
+  const roleFilteredCourses =
+    user?.role === 'TEACHER'
+      ? courses.filter((c) => c.teacherId === user.id || c.teacherName === user.name)
+      : courses;
+
+  const classFilteredCourses =
+    selectedClassFilter === 'ALL'
+      ? roleFilteredCourses
+      : roleFilteredCourses.filter((c) => c.classId === selectedClassFilter);
+
+  const filteredCourses = classFilteredCourses.filter(
     (c) =>
       c.title.toLowerCase().includes(search.toLowerCase()) ||
       c.code.toLowerCase().includes(search.toLowerCase()) ||
@@ -160,20 +172,50 @@ export const CoursesView: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-[#27140B] p-4 border border-[#522B17] rounded-2xl shadow-lg">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-[#A68F7B] absolute left-3 top-3" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('search')}
-            className="w-full pl-9 pr-4 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-xs text-white placeholder-[#A68F7B] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
-          />
+      <div className="space-y-3 bg-[#27140B] p-4 border border-[#522B17] rounded-2xl shadow-lg">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-[#A68F7B] absolute left-3 top-3" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('search')}
+              className="w-full pl-9 pr-4 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-xs text-white placeholder-[#A68F7B] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+            />
+          </div>
+
+          <div className="text-xs text-[#CBB39C] font-medium">
+            Showing <span className="text-[#F5A623] font-bold">{filteredCourses.length}</span> active courses
+          </div>
         </div>
 
-        <div className="text-xs text-[#CBB39C] font-medium">
-          Showing <span className="text-[#F5A623] font-bold">{filteredCourses.length}</span> active courses
+        {/* Class Filter Pills */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#3A1E10]">
+          <span className="text-[11px] text-[#A68F7B] mr-1 font-semibold">Filter Class:</span>
+          <button
+            onClick={() => setSelectedClassFilter('ALL')}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition border ${
+              selectedClassFilter === 'ALL'
+                ? 'bg-[#E5921A] text-[#1E0C04] border-[#F5A623]'
+                : 'bg-[#180B05] text-[#CBB39C] border-[#522B17] hover:text-white'
+            }`}
+          >
+            All Classes (8)
+          </button>
+          {classes.map((cls) => (
+            <button
+              key={cls.id}
+              onClick={() => setSelectedClassFilter(cls.id)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition border ${
+                selectedClassFilter === cls.id
+                  ? 'bg-[#E5921A] text-[#1E0C04] border-[#F5A623]'
+                  : 'bg-[#180B05] text-[#CBB39C] border-[#522B17] hover:text-white'
+              }`}
+            >
+              {cls.name}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -196,6 +238,7 @@ export const CoursesView: React.FC = () => {
             <tbody className="divide-y divide-[#3A1E10]">
               {filteredCourses.map((c) => {
                 const isMyCourse = user?.role === 'TEACHER' && (c.teacherId === user.id || c.teacherName === user.name);
+                const classObj = classes.find((cls) => cls.id === c.classId || cls.name === c.classId);
 
                 return (
                   <tr key={c.id} className={`hover:bg-[#351C0F]/60 transition ${isMyCourse ? 'bg-[#351C0F]/40' : ''}`}>
@@ -213,7 +256,7 @@ export const CoursesView: React.FC = () => {
                       <div className="font-semibold text-white">{c.title}</div>
                       <div className="text-[#CBB39C] text-[11px]">{c.amharicTitle}</div>
                     </td>
-                    <td className="p-4 font-medium text-[#F7E5C8]">{c.classId}</td>
+                    <td className="p-4 font-medium text-[#F7E5C8]">{classObj ? classObj.name : c.classId}</td>
                     <td className="p-4">
                       <span className="px-2.5 py-1 bg-amber-500/10 text-[#F5A623] border border-amber-500/20 text-[11px] font-semibold rounded-lg">
                         {c.semester}

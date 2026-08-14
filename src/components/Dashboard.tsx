@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
-import { Course, ScheduleItem, SubmissionReview } from '../types';
+import { AcademicClass, Course, ScheduleItem, Student, SubmissionReview } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
+import { getEthiopianAcademicYearLabel, formatEthiopianDateTime, formatEthiopianDate, formatTimeStringToEthiopian } from '../utils/ethiopianCalendar';
 import {
   Users,
   UserCheck,
@@ -15,6 +16,7 @@ import {
   TrendingUp,
   Award,
   Calendar,
+  Layers,
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -29,6 +31,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [submissions, setSubmissions] = useState<SubmissionReview[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,11 +41,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       api.getSchedules(),
       api.getSubmissions(),
       api.getAuditLogs(),
-    ]).then(([crsRes, schRes, subRes, logRes]) => {
+      api.getStudents(),
+      api.getClasses(),
+    ]).then(([crsRes, schRes, subRes, logRes, stdRes, clsRes]) => {
       if (crsRes.success) setCourses(crsRes.data);
       if (schRes.success) setSchedules(schRes.data);
       if (subRes.success) setSubmissions(subRes.data);
       if (logRes.success) setAuditLogs(logRes.data);
+      if (stdRes.success) setStudents(stdRes.data);
+      if (clsRes.success) setClasses(clsRes.data);
       setLoading(false);
     });
   }, []);
@@ -49,6 +57,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
   const pendingSubmissions = submissions.filter((s) => s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW');
   const myCourses = courses.filter((c) => c.teacherId === user?.id || c.teacherName === user?.name);
   const mySchedule = schedules.filter((s) => s.teacherId === user?.id || s.teacherName === user?.name);
+
+  // Student analytics calculations
+  const totalStudentsCount = students.length;
+  const maleStudentsCount = students.filter((s) => s.gender === 'Male').length;
+  const femaleStudentsCount = students.filter((s) => s.gender === 'Female').length;
 
   if (loading) {
     return (
@@ -65,7 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-[#F5A623] mb-1">
             <span className="w-2 h-2 rounded-full bg-[#F5A623] animate-ping" />
-            <span>Academic Year {getCurrentAcademicYear()} • Haymete Abrham Sunday School</span>
+            <span>{language === 'am' ? 'የትምህርት ዘመን' : 'Academic Year'} {getEthiopianAcademicYearLabel(language)} • Haymete Abrham Sunday School</span>
           </div>
           <h2 className="text-2xl font-bold text-white tracking-tight font-serif">
             {t('welcomeBack')}, {language === 'am' && user?.amharicName ? user.amharicName : user?.name}!
@@ -108,18 +121,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
       {/* Primary KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-[#27140B] border border-[#522B17] rounded-2xl shadow-lg flex items-center justify-between">
+        <div 
+          onClick={() => setActiveTab('classes')}
+          className="p-4 bg-[#27140B] border border-[#522B17] hover:border-[#F5A623]/50 cursor-pointer transition rounded-2xl shadow-lg flex items-center justify-between"
+        >
           <div>
             <span className="text-[11px] font-bold text-[#CBB39C] uppercase tracking-wider">{t('totalClasses')}</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">8</h3>
-            <span className="text-[10px] text-[#F5A623] font-semibold">Active Sunday School Level 1-8</span>
+            <h3 className="text-2xl font-extrabold text-white mt-1">{classes.length || 8}</h3>
+            <span className="text-[10px] text-[#F5A623] font-semibold">Active Sunday School Levels 1-8</span>
           </div>
           <div className="p-3 bg-[#180B05] border border-[#522B17] rounded-xl text-[#F5A623]">
             <GraduationCap className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-4 bg-[#27140B] border border-[#522B17] rounded-2xl shadow-lg flex items-center justify-between">
+        <div 
+          onClick={() => setActiveTab('courses')}
+          className="p-4 bg-[#27140B] border border-[#522B17] hover:border-[#F5A623]/50 cursor-pointer transition rounded-2xl shadow-lg flex items-center justify-between"
+        >
           <div>
             <span className="text-[11px] font-bold text-[#CBB39C] uppercase tracking-wider">{t('activeCourses')}</span>
             <h3 className="text-2xl font-extrabold text-white mt-1">
@@ -134,18 +153,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           </div>
         </div>
 
-        <div className="p-4 bg-[#27140B] border border-[#522B17] rounded-2xl shadow-lg flex items-center justify-between">
+        <div 
+          onClick={() => setActiveTab('students')}
+          className="p-4 bg-[#27140B] border border-[#522B17] hover:border-[#F5A623]/50 cursor-pointer transition rounded-2xl shadow-lg flex items-center justify-between"
+        >
           <div>
             <span className="text-[11px] font-bold text-[#CBB39C] uppercase tracking-wider">{t('totalStudents')}</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">280</h3>
-            <span className="text-[10px] text-[#F5A623] font-semibold">Registered Students</span>
+            <h3 className="text-2xl font-extrabold text-white mt-1">{totalStudentsCount}</h3>
+            <span className="text-[10px] text-[#F5A623] font-semibold">
+              {maleStudentsCount} Male • {femaleStudentsCount} Female (10/Class)
+            </span>
           </div>
           <div className="p-3 bg-[#180B05] border border-[#522B17] rounded-xl text-[#F5A623]">
             <Users className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-4 bg-[#27140B] border border-[#522B17] rounded-2xl shadow-lg flex items-center justify-between">
+        <div 
+          onClick={() => setActiveTab(user?.role === 'TEACHER' ? 'markEntry' : 'reviewQueue')}
+          className="p-4 bg-[#27140B] border border-[#522B17] hover:border-[#F5A623]/50 cursor-pointer transition rounded-2xl shadow-lg flex items-center justify-between"
+        >
           <div>
             <span className="text-[11px] font-bold text-[#CBB39C] uppercase tracking-wider">{t('approvalQueue')}</span>
             <h3 className="text-2xl font-extrabold text-[#F5A623] mt-1">{pendingSubmissions.length}</h3>
@@ -154,6 +181,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           <div className="p-3 bg-[#180B05] border border-[#522B17] rounded-xl text-[#F5A623]">
             <AlertCircle className="w-6 h-6" />
           </div>
+        </div>
+      </div>
+
+      {/* Class Level Enrollment Analytics Bar */}
+      <div className="bg-[#27140B] border border-[#522B17] rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-[#4A2715] mb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[#F5A623]" />
+            <h3 className="font-bold text-white text-sm">
+              {language === 'am' ? 'የክፍል ደረጃዎች የተማሪዎች ምደባ' : 'Class Levels Student Enrollment Analysis'}
+            </h3>
+          </div>
+          <span className="text-xs font-bold text-[#F5A623] bg-[#180B05] px-3 py-1 rounded-lg border border-[#522B17]">
+            Total: {totalStudentsCount} Students across {classes.length || 8} Classes
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+          {(classes.length > 0 ? classes : Array.from({ length: 8 }).map((_, i) => ({ id: `cls-${i+1}`, level: i+1, name: `Class ${i+1}`, amharicName: `ክፍል ${i+1}` }))).map((cls: any) => {
+            const count = students.filter((s) => s.classId === cls.id || s.className === cls.name).length;
+            return (
+              <div 
+                key={cls.id}
+                onClick={() => setActiveTab('students')}
+                className="bg-[#180B05] border border-[#4A2715] hover:border-[#F5A623] transition p-2.5 rounded-xl text-center cursor-pointer group"
+              >
+                <div className="text-[10px] font-bold text-[#CBB39C] truncate">{cls.name}</div>
+                <div className="text-xs font-semibold text-[#F7E5C8]/80 truncate">{cls.amharicName}</div>
+                <div className="text-base font-extrabold text-[#F5A623] mt-1 group-hover:scale-110 transition">
+                  {count}
+                </div>
+                <div className="text-[9px] text-[#A68F7B]">students</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -223,15 +285,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {(user?.role === 'TEACHER' ? mySchedule : schedules.slice(0, 4)).map((s) => (
-                <div key={s.id} className="p-3 bg-[#180B05] border border-[#4A2715] rounded-xl space-y-1">
+                <div key={s.id} className="p-3 bg-[#180B05] border border-[#4A2715] hover:border-[#F5A623]/50 transition rounded-xl space-y-1">
                   <div className="flex justify-between font-bold text-[#F5A623]">
                     <span>{s.day}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" /> {s.startTime}-{s.endTime}
                     </span>
                   </div>
+                  <div className="text-[10px] text-[#F7E5C8]/80 font-mono">
+                    {formatTimeStringToEthiopian(s.startTime, language)} - {formatTimeStringToEthiopian(s.endTime, language)}
+                  </div>
                   <div className="font-semibold text-white">{s.courseCode}: {s.courseTitle}</div>
-                  <div className="text-[11px] text-[#CBB39C]">Room: {s.room} • {s.teacherName}</div>
+                  <div className="text-[11px] text-[#CBB39C]">
+                    📍 {s.room} • Class: <strong className="text-white">{s.className}</strong> (Sec {s.section})
+                  </div>
                 </div>
               ))}
             </div>
@@ -285,7 +352,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
               {auditLogs.slice(0, 4).map((log) => (
                 <div key={log.id} className="pb-2 border-b border-[#3A1E10] last:border-0">
                   <div className="font-semibold text-[#F7E5C8]">{log.action}</div>
-                  <div className="text-[10px] text-[#A68F7B] mt-0.5">{log.userName} • {log.timestamp}</div>
+                  <div className="text-[10px] text-[#A68F7B] mt-0.5">{log.userName} • {formatEthiopianDateTime(log.timestamp, language)}</div>
                 </div>
               ))}
             </div>

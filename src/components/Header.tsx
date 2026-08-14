@@ -3,23 +3,30 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { Notification } from '../types';
-import { Bell, Globe, LogOut, User as UserIcon, Menu, X, ArrowLeft } from 'lucide-react';
+import { Bell, Globe, LogOut, User as UserIcon, Menu, X, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
 import { ChurchLogo } from './ChurchLogo';
+import { formatEthiopianDate, formatEthiopianTimeOnly, formatEthiopianDateTime } from '../utils/ethiopianCalendar';
 
 interface HeaderProps {
   onToggleMobileMenu?: () => void;
   isMobileMenuOpen?: boolean;
-  onGoBack?: () => void;
-  canGoBack?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenuOpen, onGoBack, canGoBack }) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
   const { user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -74,16 +81,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
       <header className="h-16 bg-[#180B05] border-b border-[#4A2715] text-[#F7E5C8] px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xl">
         {/* Left Branding with Logo Domes Emblem & Mobile Hamburger Button */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {canGoBack && onGoBack && (
-            <button
-              onClick={onGoBack}
-              className="p-2 rounded-xl bg-[#27140B] hover:bg-[#351C0F] text-[#F5A623] border border-[#522B17] transition flex items-center justify-center"
-              title={t('back')}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-          )}
-
           {/* Mobile Menu Toggle Button */}
           {onToggleMobileMenu && (
             <button
@@ -112,8 +109,21 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
           </div>
         </div>
 
-        {/* Right Controls */}
+        {/* Center/Right Controls */}
         <div className="flex items-center gap-2 sm:gap-4">
+          {/* Live Ethiopian Calendar Date & Time Widget */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#27140B] border border-[#522B17] text-xs shadow-inner">
+            <div className="flex items-center gap-1.5 text-[#F5A623] font-semibold">
+              <CalendarIcon className="w-3.5 h-3.5" />
+              <span>{formatEthiopianDate(currentTime, language, true)}</span>
+            </div>
+            <span className="text-[#5C321B]">|</span>
+            <div className="flex items-center gap-1.5 text-[#F7E5C8] font-mono text-[11px]">
+              <Clock className="w-3.5 h-3.5 text-[#FBB03B]" />
+              <span>{formatEthiopianTimeOnly(currentTime, language)}</span>
+            </div>
+          </div>
+
           {/* Language Switcher */}
           <button
             onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
@@ -159,10 +169,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleMobileMenu, isMobileMenu
                         <div className="font-semibold text-white">{n.title}</div>
                         <div className="text-[#CBB39C] text-[11px] mt-0.5">{n.message}</div>
                         <div className="text-[10px] text-[#A68F7B] mt-1">
-                          {new Date(n.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatEthiopianDateTime(n.timestamp, language)}
                         </div>
                       </div>
                     ))

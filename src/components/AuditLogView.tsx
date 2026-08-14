@@ -3,9 +3,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { AuditLog } from '../types';
 import { ShieldAlert, Search, Clock } from 'lucide-react';
+import { formatEthiopianDateTime } from '../utils/ethiopianCalendar';
 
 export const AuditLogView: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [search, setSearch] = useState('');
 
@@ -72,8 +73,8 @@ export const AuditLogView: React.FC = () => {
             <tbody className="divide-y divide-slate-800">
               {filteredLogs.map((l) => (
                 <tr key={l.id} className="hover:bg-slate-800/60 transition">
-                  <td className="p-4 text-slate-400 font-mono text-[11px]">
-                    {new Date(l.timestamp).toLocaleString()}
+                  <td className="p-4 text-[#F7E5C8] font-mono text-[11px]">
+                    {formatEthiopianDateTime(l.timestamp, language)}
                   </td>
                   <td className="p-4 font-semibold text-slate-100">{l.userName}</td>
                   <td className="p-4">

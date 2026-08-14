@@ -292,7 +292,13 @@ export const ClassesView: React.FC = () => {
       <div className="grid grid-cols-1 gap-4">
         {classes.map((cls) => {
           const classCourses = courses.filter((c) => c.classId === cls.id);
-          const classStudents = students.filter((s) => s.classId === cls.id || s.className === cls.name);
+          const classStudents = students
+            .filter((s) => s.classId === cls.id || s.className === cls.name)
+            .sort((a, b) => {
+              const nameA = `${a.firstName} ${a.lastName}`.trim().toLowerCase();
+              const nameB = `${b.firstName} ${b.lastName}`.trim().toLowerCase();
+              return nameA.localeCompare(nameB);
+            });
           const configuredSemesters = cls.semesters || ['Semester I', 'Semester II'];
           const isExpanded = expandedClassId === cls.id;
 
