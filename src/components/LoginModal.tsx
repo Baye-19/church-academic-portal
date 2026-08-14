@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { UserRole } from '../types';
-import { ShieldCheck, BookOpen, Globe, Lock, Eye, EyeOff, KeyRound, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShieldCheck, BookOpen, Globe, Lock, Eye, EyeOff } from 'lucide-react';
 import { ChurchLogo } from './ChurchLogo';
 import { DeveloperBanner } from './DeveloperBanner';
 
@@ -14,42 +13,6 @@ export const LoginModal: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [showCredsGuide, setShowCredsGuide] = useState(false);
-
-  const actorCredentials: { role: UserRole; titleAm: string; titleEn: string; email: string; pass: string; badge: string }[] = [
-    {
-      role: 'ADMIN',
-      titleAm: 'አስተዳዳሪ (Admin)',
-      titleEn: 'System Administrator',
-      email: 'ashu@admin.edu',
-      pass: 'Admin@123!',
-      badge: 'Admin',
-    },
-    {
-      role: 'DEPT_HEAD',
-      titleAm: 'የት/ክፍል ኃላፊ (Dept-Head)',
-      titleEn: 'Department Head',
-      email: 'head@head.edu',
-      pass: 'Head@123!',
-      badge: 'Dept Head',
-    },
-    {
-      role: 'TEACHER',
-      titleAm: 'መምህር (Teacher)',
-      titleEn: 'Course Teacher',
-      email: 'teacher@class.edu',
-      pass: 'Teacher@123!',
-      badge: 'Teacher',
-    },
-    {
-      role: 'COORDINATOR',
-      titleAm: 'አስተባባሪ (Coordinator)',
-      titleEn: 'Section Coordinator',
-      email: 'coordinator@amras.edu',
-      pass: 'Coordinator@123!',
-      badge: 'Coordinator',
-    },
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,12 +23,6 @@ export const LoginModal: React.FC = () => {
     if (!result.success) {
       setError(result.message || 'Login failed');
     }
-  };
-
-  const handleSelectActor = (cred: typeof actorCredentials[0]) => {
-    setEmail(cred.email);
-    setPassword(cred.pass);
-    setError('');
   };
 
   return (
@@ -150,7 +107,7 @@ export const LoginModal: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. admin@amras.edu"
+                  placeholder="e.g. ashu@admin.edu"
                   className="w-full px-3.5 py-2.5 bg-[#180B05] border border-[#5C321B] rounded-xl text-white placeholder-[#A68F7B] focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
                 />
               </div>
@@ -181,57 +138,12 @@ export const LoginModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-2.5 px-4 bg-[#E5921A] hover:bg-[#FBB03B] font-bold text-[#1E0C04] text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 bg-[#E5921A] hover:bg-[#FBB03B] font-bold text-[#1E0C04] text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2 mt-2"
               >
                 <Lock className="w-4 h-4" />
                 <span>{submitting ? 'Authenticating...' : t('loginBtn')}</span>
               </button>
             </form>
-
-            {/* Quick Actor Credentials Helper Dropdown */}
-            <div className="mt-5 pt-4 border-t border-[#4A2715]/70">
-              <button
-                type="button"
-                onClick={() => setShowCredsGuide(!showCredsGuide)}
-                className="w-full flex items-center justify-between text-[11px] text-[#CBB39C] hover:text-[#F5A623] transition font-medium py-1"
-              >
-                <span className="flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5 text-[#F5A623]" />
-                  <span>{language === 'am' ? 'የተዋናዮች መግቢያ ምስክር ወረቀት መረጃ' : 'Actor Default Credentials Reference'}</span>
-                </span>
-                {showCredsGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
-
-              {showCredsGuide && (
-                <div className="mt-3 space-y-2 bg-[#180B05]/90 border border-[#522B17] rounded-xl p-3 text-[11px]">
-                  <p className="text-[#A68F7B] text-[10px] leading-relaxed mb-2">
-                    {language === 'am'
-                      ? 'እያንዳንዱ ተዋናይ ልዩ ኢሜይል እና የይለፍ ቃል አለው። ወደ ቅጽ ለመሙላት አንዱን ይጫኑ ወይም በፕሮፋይልዎ ላይ ያዘምኑ።'
-                      : 'Each actor has a unique email & password. Click any role to auto-fill or edit credentials in Profile.'}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {actorCredentials.map((c) => (
-                      <div
-                        key={c.role}
-                        onClick={() => handleSelectActor(c)}
-                        className="p-2 bg-[#27140B] hover:bg-[#351C0F] border border-[#522B17] hover:border-[#F5A623]/50 rounded-lg cursor-pointer transition flex flex-col justify-between group"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-[#F5A623] text-[10px]">{language === 'am' ? c.titleAm : c.titleEn}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 bg-[#180B05] rounded text-[#CBB39C] group-hover:text-white">Fill</span>
-                        </div>
-                        <div className="text-[10px] text-[#CBB39C] truncate">
-                          <span className="text-[#A68F7B]">Email: </span>{c.email}
-                        </div>
-                        <div className="text-[10px] text-[#CBB39C] truncate font-mono">
-                          <span className="text-[#A68F7B]">Pass: </span>{c.pass}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
