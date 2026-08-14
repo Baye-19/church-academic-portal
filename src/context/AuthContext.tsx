@@ -62,13 +62,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchDemoUser = async (role: UserRole) => {
-    const roleEmails: Record<UserRole, string> = {
-      ADMIN: 'ashu@admin.edu',
-      DEPT_HEAD: 'bura@head.edu',
-      TEACHER: 'teacher1@amras.edu',
-      COORDINATOR: 'coordinator@amras.edu',
+    const roleCredentials: Record<UserRole, { email: string; pass: string }> = {
+      ADMIN: { email: 'ashu@admin.edu', pass: 'Admin@123!' },
+      DEPT_HEAD: { email: 'head@head.edu', pass: 'Head@123!' },
+      TEACHER: { email: 'teacher@class.edu', pass: 'Teacher@123!' },
+      COORDINATOR: { email: 'coordinator@amras.edu', pass: 'Coordinator@123!' },
     };
-    await login(roleEmails[role]);
+    const cred = roleCredentials[role];
+    if (cred) {
+      await login(cred.email, cred.pass);
+    }
   };
 
   const updateProfile = async (updatedFields: Partial<User>) => {

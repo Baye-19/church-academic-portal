@@ -11,6 +11,7 @@ export interface User {
   name: string;
   amharicName?: string;
   email: string;
+  password?: string;
   phone: string;
   employeeId: string;
   role: UserRole;

@@ -7,6 +7,7 @@ export let users: any[] = [
     name: 'Ashenafi Sentayehu',
     amharicName: 'አሸናፊ ስንታየሁ',
     email: 'ashu@admin.edu',
+    password: 'Admin@123!',
     phone: '+251 919183146',
     employeeId: 'ADM-101',
     role: 'ADMIN',
@@ -18,7 +19,8 @@ export let users: any[] = [
     id: 'usr-2',
     name: 'Biruk Wendemeneh',
     amharicName: 'ብሩክ ወንድሜነህ',
-    email: 'bura@head.edu',
+    email: 'head@head.edu',
+    password: 'Head@123!',
     phone: '+251 948822471',
     employeeId: 'DHD-201',
     role: 'DEPT_HEAD',
@@ -30,7 +32,8 @@ export let users: any[] = [
     id: 'usr-3',
     name: 'Instructor Abebe Kebede',
     amharicName: 'መምህር አበበ ከበደ',
-    email: 'teacher1@amras.edu',
+    email: 'teacher@class.edu',
+    password: 'Teacher@123!',
     phone: '+251 911 456789',
     employeeId: 'TCH-301',
     role: 'TEACHER',
@@ -42,7 +45,8 @@ export let users: any[] = [
     id: 'usr-4',
     name: 'Instructor Tigist Haile',
     amharicName: 'መምህር ትዕግሥት ሀይሌ',
-    email: 'teacher2@amras.edu',
+    email: 'teacher2@class.edu',
+    password: 'Teacher@123!',
     phone: '+251 911 567890',
     employeeId: 'TCH-302',
     role: 'TEACHER',
@@ -55,6 +59,7 @@ export let users: any[] = [
     name: 'Coordinator Dawit Bekele',
     amharicName: 'አስተባባሪ ዳዊት በቀለ',
     email: 'coordinator@amras.edu',
+    password: 'Coordinator@123!',
     phone: '+251 911 678901',
     employeeId: 'CRD-401',
     role: 'COORDINATOR',
@@ -623,11 +628,70 @@ export async function initFirestoreData() {
       console.log('🔄 Loading persisted records from Cloud Firestore database...');
       users = dbUsers;
 
-      // Ensure Admin user has ashu@admin.edu email updated in memory and Firestore
-      const adminUsr = users.find((u) => u.id === 'usr-1' || u.role === 'ADMIN');
-      if (adminUsr) {
-        adminUsr.email = 'ashu@admin.edu';
-        await dbSaveDoc('users', adminUsr.id, adminUsr);
+      // Ensure all 4 actor roles (Admin, Dept-Head, Teacher, Coordinator) are present with exact credentials requested
+      const defaultUsersMap: Record<string, { email: string; pass: string; role: string; name: string; amharicName: string; employeeId: string; phone: string }> = {
+        'usr-1': { email: 'ashu@admin.edu', pass: 'Admin@123!', role: 'ADMIN', name: 'Ashenafi Sentayehu', amharicName: 'አሸናፊ ስንታየሁ', employeeId: 'ADM-101', phone: '+251 919183146' },
+        'usr-2': { email: 'head@head.edu', pass: 'Head@123!', role: 'DEPT_HEAD', name: 'Biruk Wendemeneh', amharicName: 'ብሩክ ወንድሜነህ', employeeId: 'DHD-201', phone: '+251 948822471' },
+        'usr-3': { email: 'teacher@class.edu', pass: 'Teacher@123!', role: 'TEACHER', name: 'Instructor Abebe Kebede', amharicName: 'መምህር አበበ ከበደ', employeeId: 'TCH-301', phone: '+251 911 456789' },
+        'usr-4': { email: 'teacher2@class.edu', pass: 'Teacher@123!', role: 'TEACHER', name: 'Instructor Tigist Haile', amharicName: 'መምህር ትዕግሥት ሀይሌ', employeeId: 'TCH-302', phone: '+251 911 567890' },
+        'usr-5': { email: 'coordinator@amras.edu', pass: 'Coordinator@123!', role: 'COORDINATOR', name: 'Coordinator Dawit Bekele', amharicName: 'አስተባባሪ ዳዊት በቀለ', employeeId: 'CRD-401', phone: '+251 911 678901' },
+      };
+
+      // Synchronize and apply credentials to users collection
+      for (const [id, def] of Object.entries(defaultUsersMap)) {
+        let existing = users.find((u) => u.id === id || (u.role === def.role && u.role !== 'TEACHER'));
+        if (!existing) {
+          existing = {
+            id,
+            name: def.name,
+            amharicName: def.amharicName,
+            email: def.email,
+            password: def.pass,
+            phone: def.phone,
+            employeeId: def.employeeId,
+            role: def.role,
+            status: 'ACTIVE',
+            department: 'ህጻናት እና አዳጊ',
+            createdAt: '2026-01-18T08:00:00Z',
+          };
+          users.push(existing);
+          await dbSaveDoc('users', existing.id, existing);
+        } else {
+          let updated = false;
+          // Synchronize email and password if not custom-edited
+          if (existing.email === 'admin@amras.edu' || existing.email === 'ashu@admin.edu') {
+            existing.email = 'ashu@admin.edu';
+            existing.password = 'Admin@123!';
+            updated = true;
+          }
+          if (existing.email === 'depthead@amras.edu' || existing.email === 'bura@head.edu' || existing.email === 'head@head.edu') {
+            existing.email = 'head@head.edu';
+            existing.password = 'Head@123!';
+            updated = true;
+          }
+          if (existing.email === 'teacher@amras.edu' || existing.email === 'teacher1@amras.edu' || existing.email === 'teacher@class.edu') {
+            existing.email = 'teacher@class.edu';
+            existing.password = 'Teacher@123!';
+            updated = true;
+          }
+          if (existing.email === 'teacher2@amras.edu' || existing.email === 'teacher2@class.edu') {
+            existing.email = 'teacher2@class.edu';
+            existing.password = 'Teacher@123!';
+            updated = true;
+          }
+          if (existing.email === 'coordinator@amras.edu') {
+            existing.email = 'coordinator@amras.edu';
+            existing.password = 'Coordinator@123!';
+            updated = true;
+          }
+          if (!existing.password) {
+            existing.password = def.pass;
+            updated = true;
+          }
+          if (updated) {
+            await dbSaveDoc('users', existing.id, existing);
+          }
+        }
       }
 
       const dbClasses = await dbGetCollection('academicClasses');
