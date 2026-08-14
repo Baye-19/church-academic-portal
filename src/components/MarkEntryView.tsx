@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { Course, Student, AssessmentColumn } from '../types';
 import {
@@ -19,7 +20,8 @@ import {
 
 export const MarkEntryView: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const toast = useToast();
 
   const isAdminOrDeptHead = user?.role === 'ADMIN' || user?.role === 'DEPT_HEAD';
 
@@ -263,12 +265,19 @@ export const MarkEntryView: React.FC = () => {
         prev.map((c) => (c.id === selectedCourse.id ? { ...c, assessmentColumns: tempColumns } : c))
       );
       setShowColumnModal(false);
+      const successText =
+        language === 'am'
+          ? 'የውጤት ዓምዶች መዋቅር በተሳካ ሁኔታ ተስተካክሏል!'
+          : 'Mark columns structure updated successfully!';
       setMessage({
         type: 'success',
-        text: 'Mark columns structure updated successfully!',
+        text: successText,
       });
+      toast.success(successText);
     } else {
-      setMessage({ type: 'danger', text: 'Failed to update mark columns structure.' });
+      const errText = language === 'am' ? 'የዓምድ መዋቅር ማስተካከል አልተቻለም።' : 'Failed to update mark columns structure.';
+      setMessage({ type: 'danger', text: errText });
+      toast.error(errText);
     }
   };
 
@@ -304,15 +313,22 @@ export const MarkEntryView: React.FC = () => {
 
     setSaving(false);
     if (res.success) {
+      const successText = isSubmit
+        ? (language === 'am'
+            ? 'ውጤቱ ለአስተዳዳሪው እና ለአስተባባሪው ገምጋሚ በተሳካ ሁኔታ ተልኳል!'
+            : 'Student results submitted successfully to Admin & Coordinators!')
+        : (language === 'am' ? 'የተማሪዎች ውጤት ረቂቅ በተሳካ ሁኔታ ተቀምጧል!' : 'Student marks draft saved successfully!');
+
       setMessage({
         type: 'success',
-        text: isSubmit
-          ? (t('amharic') === 'አማርኛ' ? 'ውጤቱ ለአስተዳዳሪው እና ለአስተባባሪው ገምጋሚ በተሳካ ሁኔታ ተልኳል! የአስተዳዳሪው ማረጋገጫ እስኪሰጥ ድረስ ማስተካከል ይቻላል::' : 'Student results submitted successfully to Admin & Coordinators! Marks remain editable until Admin locks approval.')
-          : 'Draft saved successfully!',
+        text: successText,
       });
+      toast.success(successText);
       if (isSubmit) setCourseStatus('SUBMITTED');
     } else {
-      setMessage({ type: 'danger', text: 'Failed to save student marks.' });
+      const errText = language === 'am' ? 'ውጤት ማስቀመጥ አልተቻለም።' : 'Failed to save student marks.';
+      setMessage({ type: 'danger', text: errText });
+      toast.error(errText);
     }
   };
 

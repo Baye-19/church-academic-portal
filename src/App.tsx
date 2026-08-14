@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { ToastProvider } from './context/ToastContext';
 import { LoginModal } from './components/LoginModal';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -17,6 +18,7 @@ import { ReviewQueueView } from './components/ReviewQueueView';
 import { AuditLogView } from './components/AuditLogView';
 import { UsersView } from './components/UsersView';
 import { AttendanceView } from './components/AttendanceView';
+import { AcademicCalendarView } from './components/AcademicCalendarView';
 import { ArrowLeft } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -83,6 +85,8 @@ const MainAppContent: React.FC = () => {
         return <AuditLogView />;
       case 'users':
         return <UsersView />;
+      case 'academicCalendar':
+        return <AcademicCalendarView />;
       default:
         return <Dashboard setActiveTab={setActiveTab} />;
     }
@@ -136,7 +140,9 @@ export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <MainAppContent />
+        <ToastProvider>
+          <MainAppContent />
+        </ToastProvider>
       </LanguageProvider>
     </AuthProvider>
   );

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
-import { AcademicClass, Course, ScheduleItem, Student, SubmissionReview } from '../types';
+import { AcademicClass, Course, ScheduleItem, Student, SubmissionReview, AcademicCalendarEvent } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { getEthiopianAcademicYearLabel, formatEthiopianDateTime, formatEthiopianDate, formatTimeStringToEthiopian } from '../utils/ethiopianCalendar';
 import {
@@ -16,7 +16,10 @@ import {
   TrendingUp,
   Award,
   Calendar,
+  CalendarDays,
+  Sparkles,
   Layers,
+  ChevronRight,
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -33,6 +36,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<AcademicClass[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<AcademicCalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,13 +47,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       api.getAuditLogs(),
       api.getStudents(),
       api.getClasses(),
-    ]).then(([crsRes, schRes, subRes, logRes, stdRes, clsRes]) => {
+      api.getAcademicCalendarEvents(),
+    ]).then(([crsRes, schRes, subRes, logRes, stdRes, clsRes, calRes]) => {
       if (crsRes.success) setCourses(crsRes.data);
       if (schRes.success) setSchedules(schRes.data);
       if (subRes.success) setSubmissions(subRes.data);
       if (logRes.success) setAuditLogs(logRes.data);
       if (stdRes.success) setStudents(stdRes.data);
       if (clsRes.success) setClasses(clsRes.data);
+      if (calRes.success) setCalendarEvents(calRes.data);
       setLoading(false);
     });
   }, []);
@@ -88,7 +94,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            id="btn-dashboard-academic-calendar"
+            onClick={() => setActiveTab('academicCalendar')}
+            className="px-4 py-2 bg-[#351C0F] hover:bg-[#442413] text-[#F5A623] border border-[#522B17] font-bold text-xs rounded-xl shadow transition flex items-center gap-2"
+          >
+            <CalendarDays className="w-4 h-4" />
+            <span>{t('academicCalendar')}</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('attendance')}
             className="px-4 py-2 bg-[#351C0F] hover:bg-[#442413] text-[#F5A623] border border-[#522B17] font-bold text-xs rounded-xl shadow transition flex items-center gap-2"
@@ -219,6 +234,76 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         </div>
       </div>
 
+      {/* Academic Calendar & Key Dates Milestone Banner */}
+      <div className="bg-[#27140B] border border-[#522B17] rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-[#4A2715] mb-3">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-[#F5A623]" />
+            <h3 className="font-bold text-white text-sm">
+              {language === 'am' ? 'የትምህርት ካላንደር ቁልፍ ቀናትና ክንውኖች' : 'Academic Calendar & Upcoming Key Milestones'}
+            </h3>
+          </div>
+          <button
+            id="btn-dashboard-view-full-calendar"
+            onClick={() => setActiveTab('academicCalendar')}
+            className="text-xs text-[#F5A623] hover:underline font-bold flex items-center gap-1"
+          >
+            <span>{language === 'am' ? 'ሙሉ ካላንደሩን ተመልከት' : 'View Full Calendar'}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {calendarEvents.slice(0, 4).map((ev) => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isToday = ev.startDate === todayStr;
+            const isUpcoming = (ev.endDate || ev.startDate) >= todayStr;
+
+            return (
+              <div
+                key={ev.id}
+                onClick={() => setActiveTab('academicCalendar')}
+                className="bg-[#180B05] border border-[#4A2715] hover:border-[#F5A623] transition p-3.5 rounded-xl flex flex-col justify-between cursor-pointer group space-y-2"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                        ev.type === 'EXAM'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          : ev.type === 'HOLIDAY'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : ev.type === 'REGISTRATION'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                      }`}
+                    >
+                      {ev.type}
+                    </span>
+                    {ev.isImportant && (
+                      <span className="text-[9px] font-extrabold text-[#F5A623] uppercase">Key</span>
+                    )}
+                  </div>
+                  <h4 className="text-xs font-bold text-white group-hover:text-[#F5A623] transition line-clamp-1">
+                    {language === 'am' && ev.amharicTitle ? ev.amharicTitle : ev.title}
+                  </h4>
+                </div>
+
+                <div className="text-[11px] text-[#F5A623] font-semibold flex items-center gap-1">
+                  <span>📅</span>
+                  <span className="truncate">{formatEthiopianDate(ev.startDate, language === 'am' ? 'am' : 'en')}</span>
+                </div>
+
+                <div className="text-[10px] text-[#A68F7B] flex items-center justify-between border-t border-[#3A1E10] pt-1.5">
+                  <span>{ev.targetAudience || 'ALL'}</span>
+                  <span>{ev.academicYear}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Main Grid Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Assigned Courses or Pending Submissions */}
@@ -338,6 +423,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
               >
                 <span>Class Timetable</span>
                 <Calendar className="w-4 h-4 text-[#F5A623]" />
+              </button>
+
+              <button
+                id="btn-quick-action-academic-calendar"
+                onClick={() => setActiveTab('academicCalendar')}
+                className="w-full p-3 bg-[#180B05] hover:bg-[#351C0F] border border-[#522B17] rounded-xl text-left font-semibold text-white flex items-center justify-between transition"
+              >
+                <span>{t('academicCalendar')}</span>
+                <CalendarDays className="w-4 h-4 text-[#F5A623]" />
               </button>
             </div>
           </div>

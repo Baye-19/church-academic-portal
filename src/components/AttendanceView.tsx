@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, AttendanceRecord, AttendanceStatus, Student } from '../types';
 import { formatEthiopianDate, formatEthiopianDateTime } from '../utils/ethiopianCalendar';
@@ -28,7 +29,8 @@ import {
 
 export const AttendanceView: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const toast = useToast();
 
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
@@ -221,21 +223,28 @@ export const AttendanceView: React.FC = () => {
 
     setSaving(false);
     if (res.success) {
+      const successText =
+        language === 'am'
+          ? `የክፍል ${selectedClass.name} (${selectedClass.amharicName}) የመገኘት መረጃ በተሳካ ሁኔታ ተመዝግቧል!`
+          : `Attendance for ${selectedClass.name} saved successfully!`;
+
       setMessage({
         type: 'success',
-        text: t('amharic') === 'አማርኛ'
-          ? 'የተማሪዎች መገኘት መረጃ በተሳካ ሁኔታ ተመዝግቧል!'
-          : 'Student attendance saved successfully!',
+        text: successText,
       });
+      toast.success(successText);
+
       // Refresh historical attendance list
       api.getAttendance().then((attRes) => {
         if (attRes.success) setAttendanceRecords(attRes.data);
       });
     } else {
+      const errorText = language === 'am' ? 'የአቴንዳንስ መረጃ ማስቀመጥ አልተቻለም።' : 'Failed to save attendance records.';
       setMessage({
         type: 'danger',
-        text: 'Failed to save attendance records.',
+        text: errorText,
       });
+      toast.error(errorText);
     }
   };
 

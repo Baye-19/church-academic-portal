@@ -75,6 +75,76 @@ export interface Student {
   status: 'ACTIVE' | 'INACTIVE' | 'GRADUATED';
 }
 
+export type BehavioralNoteCategory =
+  | 'COMMENDATION'
+  | 'SPIRITUAL_GROWTH'
+  | 'ACADEMIC_EFFORT'
+  | 'ATTENDANCE_PUNCTUALITY'
+  | 'DISCIPLINARY'
+  | 'COUNSELING'
+  | 'GENERAL';
+
+export type BehavioralSeverity = 'POSITIVE' | 'NEUTRAL' | 'WARNING' | 'CRITICAL';
+
+export interface BehavioralNote {
+  id: string;
+  studentId: string;
+  studentName?: string;
+  studentAmharicName?: string;
+  title: string;
+  category: BehavioralNoteCategory;
+  severity: BehavioralSeverity;
+  content: string;
+  recordedByUserId: string;
+  recordedByUserName: string;
+  recordedByUserRole?: string;
+  date: string; // YYYY-MM-DD
+  academicYear?: string;
+  actionTaken?: string;
+  followUpRequired?: boolean;
+  createdAt: string;
+}
+
+export interface StudentProfileData {
+  student: Student;
+  academicClass?: AcademicClass;
+  attendanceSummary: {
+    totalSessions: number;
+    presentCount: number;
+    absentCount: number;
+    lateCount: number;
+    excusedCount: number;
+    attendanceRate: number; // 0 - 100
+  };
+  attendanceHistory: {
+    id: string;
+    date: string;
+    ethiopianDate?: string;
+    className: string;
+    section: string;
+    status: AttendanceStatus;
+    remark?: string;
+    takenByUserName: string;
+  }[];
+  grades: {
+    marks: (Mark & {
+      courseCode?: string;
+      courseTitle?: string;
+      courseAmharicTitle?: string;
+      creditHours?: number;
+      semester?: string;
+      academicYear?: string;
+      teacherName?: string;
+    })[];
+    totalCreditHours: number;
+    earnedCreditHours: number;
+    gpa: number;
+    standing: string;
+    amharicStanding: string;
+  };
+  behavioralNotes: BehavioralNote[];
+}
+
 export interface Mark {
   id: string;
   studentId: string;
@@ -179,6 +249,33 @@ export interface AttendanceRecord {
   takenByUserName: string;
   entries: StudentAttendanceEntry[];
   createdAt: string;
+}
+
+export type CalendarEventType =
+  | 'EXAM'
+  | 'HOLIDAY'
+  | 'REGISTRATION'
+  | 'ACADEMIC_MILESTONE'
+  | 'MEETING'
+  | 'SPECIAL_EVENT';
+
+export interface AcademicCalendarEvent {
+  id: string;
+  title: string;
+  amharicTitle: string;
+  type: CalendarEventType;
+  startDate: string; // YYYY-MM-DD
+  endDate?: string;  // YYYY-MM-DD (inclusive)
+  academicYear: string; // e.g. "2025/2026", "2026/2027"
+  semester?: 'Semester I' | 'Semester II' | 'All';
+  description?: string;
+  amharicDescription?: string;
+  location?: string;
+  targetAudience?: 'ALL' | 'TEACHERS' | 'STUDENTS' | 'PARENTS' | 'ADMIN';
+  isImportant?: boolean;
+  color?: string;
+  createdBy?: string;
+  createdAt?: string;
 }
 
 export type Language = 'en' | 'am';

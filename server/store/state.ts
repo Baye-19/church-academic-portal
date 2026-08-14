@@ -701,14 +701,442 @@ export let attendanceRecords: any[] = [
     takenByUserId: 'usr-1',
     takenByUserName: 'Ashenafi Sentayehu',
     entries: [
-      { studentId: 'std-1', studentCode: 'ST-2026-001', studentName: 'Abebe Girma', studentAmharicName: 'አበበ ግርማ', status: 'PRESENT', remark: 'On time' },
+      { studentId: 'std-1', studentCode: 'ST-2026-001', studentName: 'Abebe Girma', studentAmharicName: 'አበበ ግርማ', status: 'PRESENT', remark: 'On time and active' },
       { studentId: 'std-2', studentCode: 'ST-2026-002', studentName: 'Hana Alemu', studentAmharicName: 'ሃና አለሙ', status: 'PRESENT', remark: '' },
       { studentId: 'std-3', studentCode: 'ST-2026-003', studentName: 'Kebede Mulugeta', studentAmharicName: 'ከበደ ሙሉጌታ', status: 'LATE', remark: 'Arrived 15m late' },
       { studentId: 'std-4', studentCode: 'ST-2026-004', studentName: 'Makeda Taye', studentAmharicName: 'ማክዳ ታዬ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-5', studentCode: 'ST-2026-005', studentName: 'Yared Tadesse', studentAmharicName: 'ያሬድ ታደሰ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-6', studentCode: 'ST-2026-006', studentName: 'Selamawit Belay', studentAmharicName: 'ሰላማዊት በላይ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-7', studentCode: 'ST-2026-007', studentName: 'Biruk Assefa', studentAmharicName: 'ብሩክ አሰፋ', status: 'EXCUSED', remark: 'Family illness' },
+      { studentId: 'std-8', studentCode: 'ST-2026-008', studentName: 'Hiwot Hailu', studentAmharicName: 'ሕይወት ኃይሉ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-9', studentCode: 'ST-2026-009', studentName: 'Dawit Mengistu', studentAmharicName: 'ዳዊት መንግሥቱ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-10', studentCode: 'ST-2026-010', studentName: 'Bethlehem Tesfaye', studentAmharicName: 'ቤተልሔም ተስፋዬ', status: 'PRESENT', remark: '' },
     ],
     createdAt: new Date().toISOString(),
   },
+  {
+    id: 'att-2',
+    date: '2026-08-09',
+    classId: 'cls-1',
+    className: 'Class 1',
+    section: 'A',
+    takenByUserId: 'usr-3',
+    takenByUserName: 'Instructor Abebe Kebede',
+    entries: [
+      { studentId: 'std-1', studentCode: 'ST-2026-001', studentName: 'Abebe Girma', studentAmharicName: 'አበበ ግርማ', status: 'PRESENT', remark: 'Attentive in class' },
+      { studentId: 'std-2', studentCode: 'ST-2026-002', studentName: 'Hana Alemu', studentAmharicName: 'ሃና አለሙ', status: 'PRESENT', remark: 'Excellent recitation' },
+      { studentId: 'std-3', studentCode: 'ST-2026-003', studentName: 'Kebede Mulugeta', studentAmharicName: 'ከበደ ሙሉጌታ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-4', studentCode: 'ST-2026-004', studentName: 'Makeda Taye', studentAmharicName: 'ማክዳ ታዬ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-5', studentCode: 'ST-2026-005', studentName: 'Yared Tadesse', studentAmharicName: 'ያሬድ ታደሰ', status: 'LATE', remark: 'Transport delay' },
+      { studentId: 'std-6', studentCode: 'ST-2026-006', studentName: 'Selamawit Belay', studentAmharicName: 'ሰላማዊት በላይ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-7', studentCode: 'ST-2026-007', studentName: 'Biruk Assefa', studentAmharicName: 'ብሩክ አሰፋ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-8', studentCode: 'ST-2026-008', studentName: 'Hiwot Hailu', studentAmharicName: 'ሕይወት ኃይሉ', status: 'ABSENT', remark: 'Unnotified absence' },
+      { studentId: 'std-9', studentCode: 'ST-2026-009', studentName: 'Dawit Mengistu', studentAmharicName: 'ዳዊት መንግሥቱ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-10', studentCode: 'ST-2026-010', studentName: 'Bethlehem Tesfaye', studentAmharicName: 'ቤተልሔም ተስፋዬ', status: 'PRESENT', remark: '' },
+    ],
+    createdAt: '2026-08-09T10:00:00Z',
+  },
+  {
+    id: 'att-3',
+    date: '2026-08-02',
+    classId: 'cls-1',
+    className: 'Class 1',
+    section: 'A',
+    takenByUserId: 'usr-3',
+    takenByUserName: 'Instructor Abebe Kebede',
+    entries: [
+      { studentId: 'std-1', studentCode: 'ST-2026-001', studentName: 'Abebe Girma', studentAmharicName: 'አበበ ግርማ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-2', studentCode: 'ST-2026-002', studentName: 'Hana Alemu', studentAmharicName: 'ሃና አለሙ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-3', studentCode: 'ST-2026-003', studentName: 'Kebede Mulugeta', studentAmharicName: 'ከበደ ሙሉጌታ', status: 'ABSENT', remark: 'Sick leave granted' },
+      { studentId: 'std-4', studentCode: 'ST-2026-004', studentName: 'Makeda Taye', studentAmharicName: 'ማክዳ ታዬ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-5', studentCode: 'ST-2026-005', studentName: 'Yared Tadesse', studentAmharicName: 'ያሬድ ታደሰ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-6', studentCode: 'ST-2026-006', studentName: 'Selamawit Belay', studentAmharicName: 'ሰላማዊት በላይ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-7', studentCode: 'ST-2026-007', studentName: 'Biruk Assefa', studentAmharicName: 'ብሩክ አሰፋ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-8', studentCode: 'ST-2026-008', studentName: 'Hiwot Hailu', studentAmharicName: 'ሕይወት ኃይሉ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-9', studentCode: 'ST-2026-009', studentName: 'Dawit Mengistu', studentAmharicName: 'ዳዊት መንግሥቱ', status: 'LATE', remark: '' },
+      { studentId: 'std-10', studentCode: 'ST-2026-010', studentName: 'Bethlehem Tesfaye', studentAmharicName: 'ቤተልሔም ተስፋዬ', status: 'PRESENT', remark: '' },
+    ],
+    createdAt: '2026-08-02T10:00:00Z',
+  },
+  {
+    id: 'att-4',
+    date: '2026-07-26',
+    classId: 'cls-1',
+    className: 'Class 1',
+    section: 'A',
+    takenByUserId: 'usr-5',
+    takenByUserName: 'Coordinator Dawit Bekele',
+    entries: [
+      { studentId: 'std-1', studentCode: 'ST-2026-001', studentName: 'Abebe Girma', studentAmharicName: 'አበበ ግርማ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-2', studentCode: 'ST-2026-002', studentName: 'Hana Alemu', studentAmharicName: 'ሃና አለሙ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-3', studentCode: 'ST-2026-003', studentName: 'Kebede Mulugeta', studentAmharicName: 'ከበደ ሙሉጌታ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-4', studentCode: 'ST-2026-004', studentName: 'Makeda Taye', studentAmharicName: 'ማክዳ ታዬ', status: 'PRESENT', remark: '' },
+      { studentId: 'std-5', studentCode: 'ST-2026-005', studentName: 'Yared Tadesse', studentAmharicName: 'ያሬድ ታደሰ', status: 'PRESENT', remark: '' },
+    ],
+    createdAt: '2026-07-26T10:00:00Z',
+  },
 ];
+
+export const defaultBehavioralNotes: any[] = [
+  {
+    id: 'note-1',
+    studentId: 'std-1',
+    studentName: 'Abebe Girma',
+    studentAmharicName: 'አበበ ግርማ',
+    title: 'Exemplary Liturgical Participation & Choral Dedication',
+    category: 'SPIRITUAL_GROWTH',
+    severity: 'POSITIVE',
+    content: 'Abebe displayed outstanding reverence, consistency, and active choir leadership during Sunday morning prayer services and class hymn recitations.',
+    recordedByUserId: 'usr-3',
+    recordedByUserName: 'Instructor Abebe Kebede',
+    recordedByUserRole: 'TEACHER',
+    date: '2026-08-05',
+    academicYear: '2025/2026',
+    actionTaken: 'Commended in front of class assembly',
+    followUpRequired: false,
+    createdAt: '2026-08-05T11:30:00Z',
+  },
+  {
+    id: 'note-2',
+    studentId: 'std-1',
+    studentName: 'Abebe Girma',
+    studentAmharicName: 'አበበ ግርማ',
+    title: 'Top Academic Assignment Achievement in Programming',
+    category: 'ACADEMIC_EFFORT',
+    severity: 'POSITIVE',
+    content: 'Completed advanced programming algorithms ahead of schedule and voluntarily mentored peer classmates in Section A.',
+    recordedByUserId: 'usr-3',
+    recordedByUserName: 'Instructor Abebe Kebede',
+    recordedByUserRole: 'TEACHER',
+    date: '2026-07-20',
+    academicYear: '2025/2026',
+    actionTaken: 'Awarded Class Peer Mentor certificate',
+    followUpRequired: false,
+    createdAt: '2026-07-20T14:15:00Z',
+  },
+  {
+    id: 'note-3',
+    studentId: 'std-2',
+    studentName: 'Hana Alemu',
+    studentAmharicName: 'ሃና አለሙ',
+    title: 'Distinguished Conduct and Punctuality Recognition',
+    category: 'COMMENDATION',
+    severity: 'POSITIVE',
+    content: 'Maintains 100% on-time attendance record and participates constructively in all ethical discussions.',
+    recordedByUserId: 'usr-5',
+    recordedByUserName: 'Coordinator Dawit Bekele',
+    recordedByUserRole: 'COORDINATOR',
+    date: '2026-08-02',
+    academicYear: '2025/2026',
+    actionTaken: 'Nominated for Semester Conduct Award',
+    followUpRequired: false,
+    createdAt: '2026-08-02T09:45:00Z',
+  },
+  {
+    id: 'note-4',
+    studentId: 'std-3',
+    studentName: 'Kebede Mulugeta',
+    studentAmharicName: 'ከበደ ሙሉጌታ',
+    title: 'Punctuality Advisory & Morning Arrival Reminder',
+    category: 'ATTENDANCE_PUNCTUALITY',
+    severity: 'WARNING',
+    content: 'Student was tardy for two consecutive Sunday morning classes. Spoke with student regarding morning transport logistics and time management.',
+    recordedByUserId: 'usr-3',
+    recordedByUserName: 'Instructor Abebe Kebede',
+    recordedByUserRole: 'TEACHER',
+    date: '2026-08-08',
+    academicYear: '2025/2026',
+    actionTaken: 'Direct verbal counseling and schedule plan agreed',
+    followUpRequired: true,
+    createdAt: '2026-08-08T12:00:00Z',
+  },
+  {
+    id: 'note-5',
+    studentId: 'std-4',
+    studentName: 'Makeda Taye',
+    studentAmharicName: 'ማክዳ ታዬ',
+    title: 'Active Community Outreach & Charity Volunteerism',
+    category: 'SPIRITUAL_GROWTH',
+    severity: 'POSITIVE',
+    content: 'Helped organize the Sunday School youth outreach and charity book distribution with genuine humility and enthusiasm.',
+    recordedByUserId: 'usr-5',
+    recordedByUserName: 'Coordinator Dawit Bekele',
+    recordedByUserRole: 'COORDINATOR',
+    date: '2026-07-28',
+    academicYear: '2025/2026',
+    actionTaken: 'Recorded in student character portfolio',
+    followUpRequired: false,
+    createdAt: '2026-07-28T16:20:00Z',
+  },
+  {
+    id: 'note-6',
+    studentId: 'std-5',
+    studentName: 'Yared Tadesse',
+    studentAmharicName: 'ያሬድ ታደሰ',
+    title: 'Study Habit Improvement Counseling Session',
+    category: 'COUNSELING',
+    severity: 'NEUTRAL',
+    content: 'Held an academic consultation with Yared regarding study group participation and revision methods for upcoming midterm exams.',
+    recordedByUserId: 'usr-2',
+    recordedByUserName: 'Biruk Wendemeneh',
+    recordedByUserRole: 'DEPT_HEAD',
+    date: '2026-08-01',
+    academicYear: '2025/2026',
+    actionTaken: 'Provided supplementary study materials and paired with peer tutor',
+    followUpRequired: true,
+    createdAt: '2026-08-01T15:00:00Z',
+  },
+];
+
+export let behavioralNotes: any[] = [...defaultBehavioralNotes];
+
+export const defaultAcademicCalendarEvents: any[] = [
+  // 2026/2027 Upcoming Events & Deadlines
+  {
+    id: 'evt-2026-01',
+    title: 'New Student Registration & Placement (2026/2027)',
+    amharicTitle: 'የአዲስ ተማሪዎች ምዝገባ እና ምደባ (፳፻፲፱ ዓ.ም.)',
+    type: 'REGISTRATION',
+    startDate: '2026-08-20',
+    endDate: '2026-09-05',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Annual registration and section allocation for new and returning Sunday School students across all 8 class levels.',
+    amharicDescription: 'ለሁሉም 8 የክፍል ደረጃዎች የአዳዲስ እና ነባር የሰንበት ትምህርት ቤት ተማሪዎች ዓመታዊ ምዝገባ እና የምደባ ማረጋገጫ።',
+    location: 'Main Administrative Hall / Registrar Office',
+    targetAudience: 'ALL',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-02',
+    title: 'Filseta Fasting & Feast (St. Mary)',
+    amharicTitle: 'የፍልሰታ ጾም እና በዓለ ፍልሰታ',
+    type: 'SPECIAL_EVENT',
+    startDate: '2026-08-07',
+    endDate: '2026-08-22',
+    academicYear: '2025/2026',
+    semester: 'All',
+    description: 'Sixteen days of spiritual fasting, morning liturgies, and youth special fellowship.',
+    amharicDescription: 'የአስራ ስድስት ቀናት መንፈሳዊ የፍልሰታ ጾም፣ የቅዳሴ ጸሎት እና የወጣቶች መንፈሳዊ ጉባኤ።',
+    location: 'Holy Trinity Cathedral & St. Abraham Sanctuary',
+    targetAudience: 'ALL',
+    isImportant: false,
+  },
+  {
+    id: 'evt-2026-03',
+    title: 'Enkutatash 2019 E.C. (Ethiopian New Year)',
+    amharicTitle: 'እንቁጣጣሽ ፳፻፲፱ ዓ.ም. (የዘመን መለወጫ)',
+    type: 'HOLIDAY',
+    startDate: '2026-09-11',
+    endDate: '2026-09-11',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'National and Ecclesiastical New Year celebration (Meskerem 1).',
+    amharicDescription: 'ብሔራዊ እና ቤተክርስቲያናዊ የዘመን መለወጫ በዓል (መስከረም 1)።',
+    location: 'All Sanctuaries & Sunday School Grounds',
+    targetAudience: 'ALL',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-04',
+    title: 'Semester I Opening & Orientation Assembly',
+    amharicTitle: 'የመጀመሪያ ሴሚስተር መክፈቻ እና የተማሪዎች ገለጻ',
+    type: 'ACADEMIC_MILESTONE',
+    startDate: '2026-09-20',
+    endDate: '2026-09-20',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Official opening of Sunday School classes, curriculum distribution, and student orientation.',
+    amharicDescription: 'የሰንበት ትምህርት ቤት ትምህርት መክፈቻ፣ የመማሪያ መጽሐፍት ስርጭት እና አቀባበል።',
+    location: 'Assembly Hall',
+    targetAudience: 'STUDENTS',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-05',
+    title: 'Meskel (Finding of the True Cross)',
+    amharicTitle: 'በዓለ መስቀል (ደመራ)',
+    type: 'HOLIDAY',
+    startDate: '2026-09-27',
+    endDate: '2026-09-28',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Holy Demera procession and celebratory Feast of the Holy Cross (Meskerem 17).',
+    amharicDescription: 'የደመራ ማብራት ሥነ-ስርዓት እና የታላቁ በዓለ መስቀል ክብረ በዓል (መስከረም 17)።',
+    location: 'Meskel Square & St. Abraham Compound',
+    targetAudience: 'ALL',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-06',
+    title: 'Semester I Midterm Examination Week',
+    amharicTitle: 'የመጀመሪያ ሴሚስተር የፈተና ሳምንት (Midterm)',
+    type: 'EXAM',
+    startDate: '2026-11-28',
+    endDate: '2026-12-06',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Midterm written assessments across all active courses and class levels (Classes 1 to 8).',
+    amharicDescription: 'ለሁሉም 8 የክፍል ደረጃዎች የተዘጋጀ የመጀመሪያ ሴሚስተር የጽሑፍ እና የቃል አጋማሽ ፈተና።',
+    location: 'Classrooms 101 - 208',
+    targetAudience: 'STUDENTS',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-07',
+    title: 'Genna (Ethiopian Christmas Feast)',
+    amharicTitle: 'በዓለ ልደት (ገና)',
+    type: 'HOLIDAY',
+    startDate: '2027-01-07',
+    endDate: '2027-01-07',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Celebration of the Nativity of our Lord Jesus Christ (Tahsas 29).',
+    amharicDescription: 'የጌታችንና የመድኃኒታችን የኢየሱስ ክርስቶስ የልደት በዓል (ታኅሣሥ 29)።',
+    location: 'Main Sanctuary',
+    targetAudience: 'ALL',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-08',
+    title: 'Timket (Ethiopian Epiphany Feast)',
+    amharicTitle: 'በዓለ ጥምቀት (ከተራ)',
+    type: 'HOLIDAY',
+    startDate: '2027-01-19',
+    endDate: '2027-01-20',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Holy Epiphany processions, Tabot blessing, and choir presentation.',
+    amharicDescription: 'የከተራ እና የጥምቀት በዓል አከባበር፣ የጽላት አጃቢነት እና የዝማሬ አገልግሎት።',
+    location: 'Timkete Bahir Ground',
+    targetAudience: 'ALL',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-09',
+    title: 'Semester I Final Examination Week',
+    amharicTitle: 'የመጀመሪያ ሴሚስተር ማጠቃለያ ፈተና ሳምንት (Finals)',
+    type: 'EXAM',
+    startDate: '2027-01-23',
+    endDate: '2027-01-31',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Final examination period covering all subjects. Strict attendance required.',
+    amharicDescription: 'የመጀመሪያ ሴሚስተር ማጠቃለያ ፈተናዎች የሚሰጡበት ወቅት።',
+    location: 'All Examination Halls',
+    targetAudience: 'STUDENTS',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-10',
+    title: 'Semester I Mark Submission Deadline',
+    amharicTitle: 'የመምህራን የማርክ ማስረከቢያ የመጨረሻ ቀን',
+    type: 'ACADEMIC_MILESTONE',
+    startDate: '2027-02-05',
+    endDate: '2027-02-05',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Final deadline for instructors to input, calculate, and submit grades to Coordinators.',
+    amharicDescription: 'መምህራን ማርክ ሞልተው ለአስተባባሪዎች የሚያስረክቡበት የመጨረሻ ቀን።',
+    location: 'AMRAS Online Portal',
+    targetAudience: 'TEACHERS',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2026-11',
+    title: 'Semester I Student Report Card Distribution',
+    amharicTitle: 'የመጀመሪያ ሴሚስተር የውጤት ካርድ ማደያ ቀን',
+    type: 'ACADEMIC_MILESTONE',
+    startDate: '2027-02-07',
+    endDate: '2027-02-07',
+    academicYear: '2026/2027',
+    semester: 'Semester I',
+    description: 'Official distribution of approved A4 report cards and parent consultations.',
+    amharicDescription: 'የተማሪዎች ውጤት ካርድ ለወላጆች የሚሰጥበት እና ውይይት የሚደረግበት ዕለት።',
+    location: 'Sunday School Auditorium',
+    targetAudience: 'PARENTS',
+    isImportant: true,
+  },
+
+  // 2025/2026 Recorded Events
+  {
+    id: 'evt-2025-01',
+    title: 'Fast of Nenewe (Three Days of Jonah)',
+    amharicTitle: 'የነነዌ ጾም',
+    type: 'SPECIAL_EVENT',
+    startDate: '2026-02-23',
+    endDate: '2026-02-25',
+    academicYear: '2025/2026',
+    semester: 'Semester II',
+    description: 'Three solemn days of prayer, fasting, and repentance.',
+    amharicDescription: 'የሦስት ቀናት የነነዌ ጾም እና የንስሐ ጸሎት።',
+    location: 'Church Sanctuary',
+    targetAudience: 'ALL',
+    isImportant: false,
+  },
+  {
+    id: 'evt-2025-02',
+    title: 'Adwa Victory Memorial Day',
+    amharicTitle: 'የዓድዋ ድል በዓል',
+    type: 'HOLIDAY',
+    startDate: '2026-03-02',
+    endDate: '2026-03-02',
+    academicYear: '2025/2026',
+    semester: 'Semester II',
+    description: 'Commemoration of the historic Battle of Adwa victory (Yekatit 23).',
+    amharicDescription: 'የታላቁ የዓድዋ ድል መታሰቢያ በዓል (የካቲት 23)።',
+    location: 'Church & Sunday School Grounds',
+    targetAudience: 'ALL',
+    isImportant: false,
+  },
+  {
+    id: 'evt-2025-03',
+    title: 'Fasika (Ethiopian Easter / Tensae)',
+    amharicTitle: 'በዓለ ትንሣኤ (ፋሲካ)',
+    type: 'HOLIDAY',
+    startDate: '2026-04-19',
+    endDate: '2026-04-20',
+    academicYear: '2025/2026',
+    semester: 'Semester II',
+    description: 'Glorious feast of the Resurrection of our Lord Jesus Christ.',
+    amharicDescription: 'የጌታችንና የመድኃኒታችን የኢየሱስ ክርስቶስ የትንሣኤ በዓል (ሚያዝያ 11)።',
+    location: 'Main Sanctuary',
+    targetAudience: 'ALL',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2025-04',
+    title: 'Semester II Final Examinations (2025/2026)',
+    amharicTitle: 'የሁለተኛ ሴሚስተር ዓመታዊ ማጠቃለያ ፈተና',
+    type: 'EXAM',
+    startDate: '2026-06-06',
+    endDate: '2026-06-14',
+    academicYear: '2025/2026',
+    semester: 'Semester II',
+    description: 'End-of-year final exams determining advancement and ranking.',
+    amharicDescription: 'የዓመቱ ማጠቃለያ ፈተናዎች የሚሰጡበት ወቅት።',
+    location: 'All Classrooms',
+    targetAudience: 'STUDENTS',
+    isImportant: true,
+  },
+  {
+    id: 'evt-2025-05',
+    title: 'Annual Graduation & Outstanding Student Awards',
+    amharicTitle: 'ዓመታዊ የተማሪዎች ምረቃ እና የላቀ ውጤት ሽልማት',
+    type: 'SPECIAL_EVENT',
+    startDate: '2026-06-28',
+    endDate: '2026-06-28',
+    academicYear: '2025/2026',
+    semester: 'Semester II',
+    description: 'Graduation ceremony for Level 8 graduates and award distribution for top 3 rankers in each class.',
+    amharicDescription: 'የ8ኛ ክፍል ተማሪዎች የምረቃ ሥነ-ስርዓት እና የደረጃ ተሸላሚዎች የሽልማት ፕሮግራም።',
+    location: 'Great Auditorium',
+    targetAudience: 'ALL',
+    isImportant: true,
+  },
+];
+
+export let academicCalendarEvents: any[] = [...defaultAcademicCalendarEvents];
 
 export let notifications: any[] = [
   {
@@ -734,6 +1162,10 @@ export let notifications: any[] = [
 // Mutator helpers
 export function setStudents(newStudents: any[]) {
   students = newStudents;
+}
+
+export function setBehavioralNotes(newNotes: any[]) {
+  behavioralNotes = newNotes;
 }
 
 // Grade Calculator Helper
@@ -875,10 +1307,42 @@ export async function initFirestoreData() {
       const dbAttendance = await dbGetCollection('attendanceRecords');
       if (dbAttendance.length > 0) attendanceRecords = dbAttendance;
 
+      const dbNotes = await dbGetCollection('behavioralNotes');
+      if (dbNotes && dbNotes.length > 0) {
+        const existingNoteIds = new Set(dbNotes.map((n: any) => n.id));
+        const mergedNotes = [...dbNotes];
+        for (const defNote of defaultBehavioralNotes) {
+          if (!existingNoteIds.has(defNote.id)) {
+            mergedNotes.push(defNote);
+            await dbSaveDoc('behavioralNotes', defNote.id, defNote);
+          }
+        }
+        behavioralNotes = mergedNotes;
+      } else {
+        behavioralNotes = [...defaultBehavioralNotes];
+        for (const note of behavioralNotes) await dbSaveDoc('behavioralNotes', note.id, note);
+      }
+
       const dbAuditLogs = await dbGetCollection('auditLogs');
       if (dbAuditLogs.length > 0) auditLogs = dbAuditLogs;
 
-      console.log(`✅ Firestore loaded: ${students.length} students, ${marks.length} mark records, and ${attendanceRecords.length} attendance logs.`);
+      const dbEvents = await dbGetCollection('academicCalendarEvents');
+      if (dbEvents && dbEvents.length > 0) {
+        const existingEventIds = new Set(dbEvents.map((e: any) => e.id));
+        const mergedEvents = [...dbEvents];
+        for (const defEvt of defaultAcademicCalendarEvents) {
+          if (!existingEventIds.has(defEvt.id)) {
+            mergedEvents.push(defEvt);
+            await dbSaveDoc('academicCalendarEvents', defEvt.id, defEvt);
+          }
+        }
+        academicCalendarEvents = mergedEvents;
+      } else {
+        academicCalendarEvents = [...defaultAcademicCalendarEvents];
+        for (const ev of academicCalendarEvents) await dbSaveDoc('academicCalendarEvents', ev.id, ev);
+      }
+
+      console.log(`✅ Firestore loaded: ${students.length} students, ${marks.length} mark records, ${attendanceRecords.length} attendance logs, and ${behavioralNotes.length} behavioral notes.`);
     } else {
       console.log('🌱 Seeding initial records to Cloud Firestore database...');
       for (const u of users) await dbSaveDoc('users', u.id, u);
@@ -890,7 +1354,9 @@ export async function initFirestoreData() {
       for (const s of submissionReviews) await dbSaveDoc('submissionReviews', s.id, s);
       for (const sch of schedules) await dbSaveDoc('schedules', sch.id, sch);
       for (const att of attendanceRecords) await dbSaveDoc('attendanceRecords', att.id, att);
+      for (const note of behavioralNotes) await dbSaveDoc('behavioralNotes', note.id, note);
       for (const log of auditLogs) await dbSaveDoc('auditLogs', log.id, log);
+      for (const ev of academicCalendarEvents) await dbSaveDoc('academicCalendarEvents', ev.id, ev);
       console.log('✅ Initial database seed complete in Firestore!');
     }
   } catch (err) {

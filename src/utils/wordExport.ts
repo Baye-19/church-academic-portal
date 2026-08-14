@@ -680,3 +680,235 @@ export async function exportAttendanceHistoryToWord(params: {
   const filename = `Attendance_History_${safeClassName}.docx`;
   await saveDocxBlob(doc, filename);
 }
+
+/**
+ * Exports Academic Calendar Events into an official branded Word (.docx) Document
+ */
+export async function exportAcademicCalendarToWord(
+  events: Array<{
+    id: string;
+    title: string;
+    amharicTitle: string;
+    type: string;
+    startDate: string;
+    endDate?: string;
+    academicYear: string;
+    semester?: string;
+    description?: string;
+    amharicDescription?: string;
+    location?: string;
+    targetAudience?: string;
+    isImportant?: boolean;
+  }>,
+  academicYear: string = '2026/2027',
+  filterCategory: string = 'All'
+) {
+  const metaTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: transparentBorders,
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            borders: transparentBorders,
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: 'Academic Year / የትምህርት ዘመን: ', bold: true, color: '5B2C16', size: 20 }),
+                  new TextRun({ text: academicYear, size: 20 }),
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: 'Category Filter / ምድብ: ', bold: true, color: '5B2C16', size: 20 }),
+                  new TextRun({ text: filterCategory, size: 20 }),
+                ],
+              }),
+            ],
+          }),
+          new TableCell({
+            borders: transparentBorders,
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [
+                  new TextRun({ text: 'Generated Date / የተዘጋጀበት ቀን: ', bold: true, color: '5B2C16', size: 20 }),
+                  new TextRun({ text: formatEthiopianDate(new Date(), 'am', true), size: 20 }),
+                ],
+              }),
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [
+                  new TextRun({ text: 'Total Key Milestones: ', bold: true, color: '5B2C16', size: 20 }),
+                  new TextRun({ text: `${events.length} Events`, bold: true, color: 'D97706', size: 20 }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: [
+      new TableCell({
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '#', bold: true, color: 'FFFFFF', size: 19 })] })],
+      }),
+      new TableCell({
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ children: [new TextRun({ text: 'Event Title / መርሐ ግብር', bold: true, color: 'FFFFFF', size: 19 })] })],
+      }),
+      new TableCell({
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Category / ዓይነት', bold: true, color: 'FFFFFF', size: 19 })] })],
+      }),
+      new TableCell({
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Ethiopian Date / የኢትዮጵያ ቀን', bold: true, color: 'FFFFFF', size: 19 })] })],
+      }),
+      new TableCell({
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Gregorian Date', bold: true, color: 'FFFFFF', size: 19 })] })],
+      }),
+      new TableCell({
+        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
+        borders: cellBorders,
+        children: [new Paragraph({ children: [new TextRun({ text: 'Audience & Venue / ዝርዝር', bold: true, color: 'FFFFFF', size: 19 })] })],
+      }),
+    ],
+  });
+
+  const categoryLabels: Record<string, string> = {
+    EXAM: 'Exam Week / የፈተና ሳምንት',
+    HOLIDAY: 'Holiday & Feast / በዓል',
+    REGISTRATION: 'Registration / ምዝገባ',
+    ACADEMIC_MILESTONE: 'Academic Milestone / ክንውን',
+    MEETING: 'Meeting / ስብሰባ',
+    SPECIAL_EVENT: 'Special / መንፈሳዊ',
+  };
+
+  const dataRows = events.map((evt, index) => {
+    const rowBg = index % 2 === 0 ? 'FFFFFF' : 'FCF9F5';
+    const ethStart = formatEthiopianDate(evt.startDate, 'am');
+    const ethEnd = evt.endDate && evt.endDate !== evt.startDate ? ` - ${formatEthiopianDate(evt.endDate, 'am')}` : '';
+    const gregDateStr = evt.endDate && evt.endDate !== evt.startDate ? `${evt.startDate} to ${evt.endDate}` : evt.startDate;
+
+    return new TableRow({
+      children: [
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${index + 1}`, size: 18 })] })],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({ children: [new TextRun({ text: evt.amharicTitle || evt.title, bold: true, color: '27140B', size: 19 })] }),
+            new Paragraph({ children: [new TextRun({ text: evt.title, color: '6B4B3E', size: 17, italics: true })] }),
+            ...(evt.description
+              ? [new Paragraph({ spacing: { before: 40 }, children: [new TextRun({ text: evt.description, size: 16, color: '7D6A5D' })] })]
+              : []),
+          ],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({
+                  text: categoryLabels[evt.type] || evt.type,
+                  bold: true,
+                  color: evt.type === 'EXAM' ? 'B91C1C' : evt.type === 'HOLIDAY' ? '15803D' : 'B45309',
+                  size: 17,
+                }),
+              ],
+            }),
+          ],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [new TextRun({ text: `${ethStart}${ethEnd}`, bold: true, color: '5B2C16', size: 18 })],
+            }),
+          ],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [new TextRun({ text: gregDateStr, size: 17, color: '555555' })],
+            }),
+          ],
+        }),
+        new TableCell({
+          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
+          borders: cellBorders,
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Audience: ${evt.targetAudience || 'ALL'}`, bold: true, size: 17, color: '27140B' }),
+              ],
+            }),
+            ...(evt.location
+              ? [new Paragraph({ children: [new TextRun({ text: `Venue: ${evt.location}`, size: 16, color: '6B4B3E' })] })]
+              : []),
+          ],
+        }),
+      ],
+    });
+  });
+
+  const calendarTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: cellBorders,
+    rows: [headerRow, ...dataRows],
+  });
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(0.7),
+              right: convertInchesToTwip(0.7),
+              bottom: convertInchesToTwip(0.7),
+              left: convertInchesToTwip(0.7),
+            },
+          },
+        },
+        children: [
+          ...createChurchHeader(
+            'ይፋዊ የሰንበት ትምህርት ቤት የትምህርት ካላንደር / Official Academic Calendar',
+            `Haymete Abraham Sunday School — Academic Year ${academicYear}`
+          ),
+          metaTable,
+          new Paragraph({ spacing: { before: 140, after: 100 }, children: [] }),
+          calendarTable,
+          new Paragraph({ spacing: { before: 140, after: 100 }, children: [] }),
+          createSignaturesTable(),
+          createFooterParagraph(),
+        ],
+      },
+    ],
+  });
+
+  const filename = `Academic_Calendar_${academicYear.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+  await saveDocxBlob(doc, filename);
+}

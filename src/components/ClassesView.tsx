@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, Course, Student } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
@@ -23,7 +24,8 @@ import {
 
 export const ClassesView: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const toast = useToast();
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -120,12 +122,18 @@ export const ClassesView: React.FC = () => {
 
     const res = await api.createStudent(payload);
     if (res.success) {
-      setAlertMessage(
-        `Registered student ${studentFormData.firstName} ${studentFormData.lastName} (${studentFormData.amharicName}) under ${targetClassForStudent.name}!`
-      );
+      const msg =
+        language === 'am'
+          ? `ተማሪ ${studentFormData.amharicName || `${studentFormData.firstName} ${studentFormData.lastName}`} በ ${targetClassForStudent.name} (${targetClassForStudent.amharicName}) ስር ተመዝግቧል!`
+          : `Registered student ${studentFormData.firstName} ${studentFormData.lastName} under ${targetClassForStudent.name}!`;
+
+      toast.success(msg);
+      setAlertMessage(msg);
       setShowAddStudentModal(false);
       loadData();
       setTimeout(() => setAlertMessage(null), 4000);
+    } else {
+      toast.error(language === 'am' ? 'ተማሪውን መመዝገብ አልተቻለም።' : 'Failed to register student.');
     }
   };
 
@@ -179,12 +187,26 @@ export const ClassesView: React.FC = () => {
     if (editingClass) {
       const res = await api.updateClass(editingClass.id, classData);
       if (res.success) {
-        setAlertMessage(`Updated ${classData.name} successfully!`);
+        const msg =
+          language === 'am'
+            ? `የክፍል ${classData.name} (${classData.amharicName}) መረጃ ተሻሽሏል!`
+            : `Updated ${classData.name} successfully!`;
+        toast.success(msg);
+        setAlertMessage(msg);
+      } else {
+        toast.error(language === 'am' ? 'የክፍሉን መረጃ ማሻሻል አልተቻለም።' : 'Failed to update class.');
       }
     } else {
       const res = await api.createClass(classData);
       if (res.success) {
-        setAlertMessage(`Added new ${classData.name} successfully!`);
+        const msg =
+          language === 'am'
+            ? `አዲስ ${classData.name} (${classData.amharicName}) በተሳካ ሁኔታ ተፈጥሯል!`
+            : `Added new ${classData.name} successfully!`;
+        toast.success(msg);
+        setAlertMessage(msg);
+      } else {
+        toast.error(language === 'am' ? 'ክፍል መፍጠር አልተቻለም።' : 'Failed to create class.');
       }
     }
 
@@ -203,7 +225,9 @@ export const ClassesView: React.FC = () => {
 
     const currentSemesters = targetCls.semesters || ['Semester I', 'Semester II'];
     if (currentSemesters.includes(newSemesterName.trim())) {
-      alert('Semester already exists for this class!');
+      toast.warning(
+        language === 'am' ? 'ይህ ሴሚስተር ቀደም ሲል ለዚህ ክፍል ተመዝግቧል!' : 'Semester already exists for this class!'
+      );
       return;
     }
 
@@ -211,11 +235,18 @@ export const ClassesView: React.FC = () => {
     const res = await api.updateClass(targetCls.id, { semesters: updatedSemesters });
 
     if (res.success) {
-      setAlertMessage(`Added "${newSemesterName}" to ${targetCls.name}!`);
+      const msg =
+        language === 'am'
+          ? `ሴሚስተር "${newSemesterName}" ለ${targetCls.name} (${targetCls.amharicName}) ተጨምሯል!`
+          : `Added "${newSemesterName}" to ${targetCls.name}!`;
+      toast.success(msg);
+      setAlertMessage(msg);
       setShowAddSemesterModal(false);
       setNewSemesterName('');
       loadData();
       setTimeout(() => setAlertMessage(null), 4000);
+    } else {
+      toast.error(language === 'am' ? 'ሴሚስተር ማከል አልተቻለም።' : 'Failed to add semester.');
     }
   };
 
@@ -226,10 +257,17 @@ export const ClassesView: React.FC = () => {
 
     const res = await api.addAcademicYear(newYearInput.trim());
     if (res.success) {
-      setAlertMessage(`Academic Year ${newYearInput.trim()} created!`);
+      const msg =
+        language === 'am'
+          ? `የትምህርት ዘመን ${newYearInput.trim()} ተመዝግቧል!`
+          : `Academic Year ${newYearInput.trim()} created!`;
+      toast.success(msg);
+      setAlertMessage(msg);
       setNewYearInput('');
       loadData();
       setTimeout(() => setAlertMessage(null), 4000);
+    } else {
+      toast.error(language === 'am' ? 'የትምህርት ዘመን ማከል አልተቻለም።' : 'Failed to create academic year.');
     }
   };
 

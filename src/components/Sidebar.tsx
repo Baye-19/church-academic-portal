@@ -12,6 +12,7 @@ import {
   FileSpreadsheet,
   Award,
   Calendar,
+  CalendarDays,
   CheckSquare,
   ShieldAlert,
   Settings,
@@ -52,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'results', label: t('results'), icon: Award, roles: ['ADMIN', 'DEPT_HEAD', 'TEACHER'] },
     { id: 'reviewQueue', label: t('reviewQueue'), icon: CheckSquare, roles: ['ADMIN', 'DEPT_HEAD', 'COORDINATOR'] },
     { id: 'schedules', label: t('schedules'), icon: Calendar, roles: ['ADMIN', 'DEPT_HEAD', 'TEACHER', 'COORDINATOR'] },
+    { id: 'academicCalendar', label: t('academicCalendar'), icon: CalendarDays, roles: ['ADMIN', 'DEPT_HEAD', 'TEACHER', 'COORDINATOR'] },
     { id: 'auditLogs', label: t('auditLogs'), icon: ShieldAlert, roles: ['ADMIN'] },
     { id: 'users', label: t('users'), icon: Settings, roles: ['ADMIN'] },
   ];

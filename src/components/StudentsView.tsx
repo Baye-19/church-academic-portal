@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, Student } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
-import { Users, Plus, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, FileText, UserCheck } from 'lucide-react';
+import { StudentProfileModal } from './StudentProfileModal';
 
 export const StudentsView: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const toast = useToast();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [search, setSearch] = useState('');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedStudentIdForProfile, setSelectedStudentIdForProfile] = useState<string | null>(null);
 
   const PAGE_SIZE = 10;
 
@@ -69,6 +73,11 @@ export const StudentsView: React.FC = () => {
 
     const res = await api.createStudent(payload);
     if (res.success) {
+      toast.success(
+        language === 'am'
+          ? `ተማሪ ${formData.amharicName || `${formData.firstName} ${formData.lastName}`} በተሳካ ሁኔታ ተመዝግቧል!`
+          : `Student ${formData.firstName} ${formData.lastName} registered successfully!`
+      );
       setShowAddModal(false);
       setFormData({
         firstName: '',
@@ -82,6 +91,10 @@ export const StudentsView: React.FC = () => {
         academicYear: getCurrentAcademicYear(),
       });
       loadData();
+    } else {
+      toast.error(
+        language === 'am' ? 'ተማሪውን መመዝገብ አልተቻለም። እባክዎ እንደገና ይሞክሩ።' : 'Failed to register student. Please try again.'
+      );
     }
   };
 
@@ -95,7 +108,7 @@ export const StudentsView: React.FC = () => {
             <span>{t('students')} Management</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Registered student database, academic class levels, sections, and profile information.
+            Registered student database, academic class levels, sections, individual attendance, grades, and behavioral notes.
           </p>
         </div>
 
@@ -163,21 +176,28 @@ export const StudentsView: React.FC = () => {
                 <th className="p-4">{t('section')}</th>
                 <th className="p-4">{t('phone')}</th>
                 <th className="p-4">{t('status')}</th>
+                <th className="p-4 text-center">{language === 'am' ? 'የተማሪ ማህደር' : 'Profile / History'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {paginatedStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-slate-500 italic">
+                  <td colSpan={8} className="p-6 text-center text-slate-500 italic">
                     No students match the current filter criteria.
                   </td>
                 </tr>
               ) : (
                 paginatedStudents.map((std) => (
-                  <tr key={std.id} className="hover:bg-slate-800/60 transition">
+                  <tr
+                    key={std.id}
+                    className="hover:bg-slate-800/60 transition group cursor-pointer"
+                    onClick={() => setSelectedStudentIdForProfile(std.id)}
+                  >
                     <td className="p-4 font-mono font-bold text-emerald-400">{std.studentId}</td>
                     <td className="p-4">
-                      <div className="font-semibold text-slate-100">{std.firstName} {std.lastName}</div>
+                      <div className="font-semibold text-slate-100 group-hover:text-emerald-300 transition">
+                        {std.firstName} {std.lastName}
+                      </div>
                       <div className="text-slate-400 text-[11px]">{std.amharicName}</div>
                     </td>
                     <td className="p-4 font-medium text-slate-300">{std.gender}</td>
@@ -192,6 +212,15 @@ export const StudentsView: React.FC = () => {
                       <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold rounded">
                         {std.status}
                       </span>
+                    </td>
+                    <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => setSelectedStudentIdForProfile(std.id)}
+                        className="px-3 py-1.5 bg-[#2B140A] hover:bg-[#D98218] text-[#F5A623] hover:text-slate-950 border border-[#522B17] hover:border-[#D98218] rounded-xl text-xs font-bold transition flex items-center gap-1.5 mx-auto shadow-sm"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>{language === 'am' ? 'ሙሉ ማህደር' : 'View Profile'}</span>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -224,6 +253,14 @@ export const StudentsView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Drill-Down Student Profile Modal */}
+      {selectedStudentIdForProfile && (
+        <StudentProfileModal
+          studentId={selectedStudentIdForProfile}
+          onClose={() => setSelectedStudentIdForProfile(null)}
+        />
+      )}
 
       {/* Add Student Modal */}
       {showAddModal && (

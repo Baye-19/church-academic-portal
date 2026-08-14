@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { academicClasses, defaultEightClasses, academicYears, courses, schedules, students } from '../store/state';
+import { academicClasses, defaultEightClasses, academicYears, courses, schedules, students, academicCalendarEvents, defaultAcademicCalendarEvents } from '../store/state';
 import { dbSaveDoc, dbDeleteDoc } from '../db/firebase';
 
 const router = Router();
@@ -205,6 +205,114 @@ router.delete('/schedules/:id', async (req: Request, res: Response) => {
   }
   await dbDeleteDoc('schedules', id);
   res.json({ success: true, message: 'Schedule removed' });
+});
+
+// Academic Calendar Events
+router.get('/academic-calendar', async (req: Request, res: Response) => {
+  const { academicYear, semester, type } = req.query;
+
+  // Ensure default events are seeded if empty
+  if (academicCalendarEvents.length === 0) {
+    for (const defEvt of defaultAcademicCalendarEvents) {
+      academicCalendarEvents.push(defEvt);
+      await dbSaveDoc('academicCalendarEvents', defEvt.id, defEvt);
+    }
+  }
+
+  let filtered = [...academicCalendarEvents];
+
+  if (academicYear && typeof academicYear === 'string' && academicYear !== 'ALL') {
+    filtered = filtered.filter((e) => e.academicYear === academicYear || e.academicYear === 'ALL');
+  }
+
+  if (semester && typeof semester === 'string' && semester !== 'All') {
+    filtered = filtered.filter((e) => !e.semester || e.semester === 'All' || e.semester === semester);
+  }
+
+  if (type && typeof type === 'string' && type !== 'ALL') {
+    filtered = filtered.filter((e) => e.type === type);
+  }
+
+  // Sort by start date ascending
+  filtered.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+
+  res.json({ success: true, data: filtered });
+});
+
+router.post('/academic-calendar', async (req: Request, res: Response) => {
+  const {
+    title,
+    amharicTitle,
+    type,
+    startDate,
+    endDate,
+    academicYear,
+    semester,
+    description,
+    amharicDescription,
+    location,
+    targetAudience,
+    isImportant,
+    color,
+    createdBy,
+  } = req.body;
+
+  if (!title || !startDate || !type) {
+    return res.status(400).json({ success: false, message: 'Title, start date, and event type are required.' });
+  }
+
+  const newEvent = {
+    id: `evt-${Date.now()}`,
+    title,
+    amharicTitle: amharicTitle || title,
+    type: type || 'ACADEMIC_MILESTONE',
+    startDate,
+    endDate: endDate || startDate,
+    academicYear: academicYear || '2026/2027',
+    semester: semester || 'All',
+    description: description || '',
+    amharicDescription: amharicDescription || description || '',
+    location: location || '',
+    targetAudience: targetAudience || 'ALL',
+    isImportant: Boolean(isImportant),
+    color: color || '',
+    createdBy: createdBy || 'Admin',
+    createdAt: new Date().toISOString(),
+  };
+
+  academicCalendarEvents.push(newEvent);
+  await dbSaveDoc('academicCalendarEvents', newEvent.id, newEvent);
+
+  res.json({ success: true, data: newEvent });
+});
+
+router.put('/academic-calendar/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = academicCalendarEvents.findIndex((e) => e.id === id);
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: 'Academic event not found' });
+  }
+
+  academicCalendarEvents[index] = {
+    ...academicCalendarEvents[index],
+    ...req.body,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await dbSaveDoc('academicCalendarEvents', id, academicCalendarEvents[index]);
+
+  res.json({ success: true, data: academicCalendarEvents[index] });
+});
+
+router.delete('/academic-calendar/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = academicCalendarEvents.findIndex((e) => e.id === id);
+  if (index !== -1) {
+    academicCalendarEvents.splice(index, 1);
+  }
+  await dbDeleteDoc('academicCalendarEvents', id);
+
+  res.json({ success: true, message: 'Academic event removed successfully' });
 });
 
 export default router;

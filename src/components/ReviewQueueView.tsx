@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { Mark, SubmissionReview } from '../types';
 import { CheckSquare, CheckCircle, XCircle, Eye, AlertCircle, MessageSquare } from 'lucide-react';
@@ -9,6 +10,7 @@ import { formatEthiopianDateTime } from '../utils/ethiopianCalendar';
 export const ReviewQueueView: React.FC = () => {
   const { user } = useAuth();
   const { t, language } = useLanguage();
+  const toast = useToast();
 
   const [submissions, setSubmissions] = useState<SubmissionReview[]>([]);
   const [selectedSub, setSelectedSub] = useState<SubmissionReview | null>(null);
@@ -37,8 +39,15 @@ export const ReviewQueueView: React.FC = () => {
   const handleApprove = async (sub: SubmissionReview) => {
     const res = await api.approveSubmission(sub.id, user?.id, user?.name);
     if (res.success) {
+      toast.success(
+        language === 'am'
+          ? `የ ${sub.courseCode} (${sub.courseTitle}) ውጤት ፀድቋል!`
+          : `Marks for ${sub.courseCode} (${sub.courseTitle}) approved successfully!`
+      );
       setSelectedSub(null);
       loadData();
+    } else {
+      toast.error(language === 'am' ? 'ውጤቱን ማጽደቅ አልተቻለም።' : 'Failed to approve marks submission.');
     }
   };
 
@@ -48,10 +57,17 @@ export const ReviewQueueView: React.FC = () => {
 
     const res = await api.rejectSubmission(selectedSub.id, rejectReason, user?.id, user?.name);
     if (res.success) {
+      toast.info(
+        language === 'am'
+          ? `የ ${selectedSub.courseCode} ውጤት እንዲስተካከል ወደ መምህሩ ተመልሷል።`
+          : `Marks for ${selectedSub.courseCode} sent back for revision.`
+      );
       setShowRejectModal(false);
       setRejectReason('');
       setSelectedSub(null);
       loadData();
+    } else {
+      toast.error(language === 'am' ? 'መልሶ መላክ አልተቻለም።' : 'Failed to request revision.');
     }
   };
 

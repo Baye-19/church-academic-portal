@@ -1,4 +1,16 @@
-import { AcademicClass, AttendanceRecord, Course, Mark, ScheduleItem, Student, SubmissionReview, User } from '../types';
+import {
+  AcademicCalendarEvent,
+  AcademicClass,
+  AttendanceRecord,
+  BehavioralNote,
+  Course,
+  Mark,
+  ScheduleItem,
+  Student,
+  StudentProfileData,
+  SubmissionReview,
+  User,
+} from '../types';
 
 export const api = {
   async login(email: string, password?: string) {
@@ -86,6 +98,32 @@ export const api = {
 
   async getStudents(): Promise<{ success: boolean; data: Student[] }> {
     const res = await fetch('/api/students');
+    return res.json();
+  },
+
+  async getStudentProfile(studentId: string): Promise<{ success: boolean; data: StudentProfileData }> {
+    const res = await fetch(`/api/students/${studentId}/profile`);
+    return res.json();
+  },
+
+  async getStudentBehavioralNotes(studentId: string): Promise<{ success: boolean; data: BehavioralNote[] }> {
+    const res = await fetch(`/api/students/${studentId}/behavioral-notes`);
+    return res.json();
+  },
+
+  async createStudentBehavioralNote(studentId: string, noteData: Partial<BehavioralNote>): Promise<{ success: boolean; data: BehavioralNote }> {
+    const res = await fetch(`/api/students/${studentId}/behavioral-notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(noteData),
+    });
+    return res.json();
+  },
+
+  async deleteStudentBehavioralNote(studentId: string, noteId: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`/api/students/${studentId}/behavioral-notes/${noteId}`, {
+      method: 'DELETE',
+    });
     return res.json();
   },
 
@@ -219,6 +257,44 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  async getAcademicCalendarEvents(params?: { academicYear?: string; semester?: string; type?: string }): Promise<{ success: boolean; data: AcademicCalendarEvent[] }> {
+    let url = '/api/academic-calendar';
+    if (params) {
+      const q = new URLSearchParams();
+      if (params.academicYear) q.append('academicYear', params.academicYear);
+      if (params.semester) q.append('semester', params.semester);
+      if (params.type) q.append('type', params.type);
+      if (q.toString()) url += `?${q.toString()}`;
+    }
+    const res = await fetch(url);
+    return res.json();
+  },
+
+  async createAcademicCalendarEvent(eventData: Partial<AcademicCalendarEvent>) {
+    const res = await fetch('/api/academic-calendar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData),
+    });
+    return res.json();
+  },
+
+  async updateAcademicCalendarEvent(id: string, eventData: Partial<AcademicCalendarEvent>) {
+    const res = await fetch(`/api/academic-calendar/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData),
+    });
+    return res.json();
+  },
+
+  async deleteAcademicCalendarEvent(id: string) {
+    const res = await fetch(`/api/academic-calendar/${id}`, {
+      method: 'DELETE',
     });
     return res.json();
   },

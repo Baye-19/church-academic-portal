@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, Course, DayOfWeek, ScheduleItem, User } from '../types';
 import { Calendar, Plus, AlertTriangle, Trash2, Clock, MapPin, Edit3, ShieldAlert, CheckSquare, Filter } from 'lucide-react';
@@ -9,6 +10,7 @@ import { formatTimeStringToEthiopian } from '../utils/ethiopianCalendar';
 export const SchedulesView: React.FC = () => {
   const { user } = useAuth();
   const { t, language } = useLanguage();
+  const toast = useToast();
 
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -132,21 +134,44 @@ export const SchedulesView: React.FC = () => {
     let res;
     if (editingSched) {
       res = await api.updateSchedule(editingSched.id, payload);
+      if (res.success) {
+        toast.success(
+          language === 'am'
+            ? `የ ${payload.courseCode} የጊዜ ሰሌዳ ተሻሽሏል!`
+            : `Schedule for ${payload.courseCode} updated successfully!`
+        );
+      }
     } else {
       res = await api.createSchedule(payload);
+      if (res.success) {
+        toast.success(
+          language === 'am'
+            ? `አዲስ የክፍለ-ጊዜ ሰሌዳ ለ ${payload.courseCode} ተመዝግቧል!`
+            : `Schedule slot for ${payload.courseCode} added successfully!`
+        );
+      }
     }
 
     if (res.success) {
       setShowModal(false);
       loadData();
     } else {
-      setConflictError(res.message || 'Schedule conflict detected.');
+      const errMsg = res.message || (language === 'am' ? 'የጊዜ ሰሌዳ ግጭት ተፈጥሯል።' : 'Schedule conflict detected.');
+      setConflictError(errMsg);
+      toast.error(errMsg);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this schedule slot?')) {
-      await api.deleteSchedule(id);
+    if (confirm(language === 'am' ? 'ይህን የክፍለ ጊዜ ሰሌዳ መሰረዝ ይፈልጋሉ?' : 'Are you sure you want to delete this schedule slot?')) {
+      const res = await api.deleteSchedule(id);
+      if (res.success) {
+        toast.success(
+          language === 'am' ? 'የጊዜ ሰሌዳው በተሳካ ሁኔታ ተሰርዟል!' : 'Schedule slot deleted successfully!'
+        );
+      } else {
+        toast.error(language === 'am' ? 'የጊዜ ሰሌዳውን መሰረዝ አልተቻለም።' : 'Failed to delete schedule slot.');
+      }
       loadData();
     }
   };

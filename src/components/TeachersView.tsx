@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { User } from '../types';
 import { UserCheck, Plus, Search, Mail, Phone, ShieldCheck } from 'lucide-react';
 
 export const TeachersView: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const toast = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -46,6 +48,11 @@ export const TeachersView: React.FC = () => {
     };
     const res = await api.createUser(payload);
     if (res.success) {
+      toast.success(
+        language === 'am'
+          ? `መምህር/አስተባባሪ ${formData.amharicName || formData.name} በተሳካ ሁኔታ ተመዝግቧል!`
+          : `Faculty member "${formData.name}" registered successfully!`
+      );
       setShowAddModal(false);
       setFormData({
         name: '',
@@ -57,6 +64,8 @@ export const TeachersView: React.FC = () => {
         department: 'Computer Science',
       });
       loadData();
+    } else {
+      toast.error(language === 'am' ? 'መምህር መመዝገብ አልተቻለም።' : 'Failed to register faculty member.');
     }
   };
 

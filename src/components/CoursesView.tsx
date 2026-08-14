@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, Course, User } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
@@ -8,7 +9,8 @@ import { BookOpen, Plus, Search, CheckCircle2, UserCheck, Pencil } from 'lucide-
 
 export const CoursesView: React.FC = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const toast = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -100,8 +102,15 @@ export const CoursesView: React.FC = () => {
 
     const res = await api.createCourse(payload);
     if (res.success) {
+      toast.success(
+        language === 'am'
+          ? `የትምህርት አይነት "${payload.code} - ${payload.amharicTitle || payload.title}" በተሳካ ሁኔታ ተፈጥሯል!`
+          : `Course "${payload.code} - ${payload.title}" created successfully!`
+      );
       setShowAddModal(false);
       loadData();
+    } else {
+      toast.error(language === 'am' ? 'የትምህርት አይነት መፍጠር አልተቻለም።' : 'Failed to create course.');
     }
   };
 
@@ -140,9 +149,16 @@ export const CoursesView: React.FC = () => {
 
     const res = await api.updateCourse(editingCourse.id, payload);
     if (res.success) {
+      toast.success(
+        language === 'am'
+          ? `የትምህርት አይነት "${payload.code}" መረጃ ተሻሽሏል!`
+          : `Course "${payload.code}" updated successfully!`
+      );
       setShowEditModal(false);
       setEditingCourse(null);
       loadData();
+    } else {
+      toast.error(language === 'am' ? 'የትምህርት አይነት ማሻሻል አልተቻለም።' : 'Failed to update course.');
     }
   };
 
