@@ -5,6 +5,8 @@ import { api } from '../services/api';
 import { AcademicClass, AttendanceRecord, AttendanceStatus, Student } from '../types';
 import { formatEthiopianDate, formatEthiopianDateTime } from '../utils/ethiopianCalendar';
 import { exportAttendanceToWord, exportAttendanceHistoryToWord } from '../utils/wordExport';
+import { AttendanceMonthlyProgressChart } from './AttendanceMonthlyProgressChart';
+import { AttendanceDownloadModal } from './AttendanceDownloadModal';
 import {
   UserCheck,
   Calendar,
@@ -19,6 +21,9 @@ import {
   Search,
   FileText,
   Download,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 export const AttendanceView: React.FC = () => {
@@ -47,7 +52,9 @@ export const AttendanceView: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'take' | 'history'>('take');
+  const [activeTab, setActiveTab] = useState<'take' | 'analytics' | 'history'>('take');
+  const [showMonthlyChartInSheet, setShowMonthlyChartInSheet] = useState(true);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'danger'; text: string } | null>(null);
@@ -365,11 +372,22 @@ export const AttendanceView: React.FC = () => {
           <div className="flex items-center gap-1.5 bg-[#351909] border border-[#F5A623]/40 rounded-xl px-3 py-1.5 text-xs text-[#FBB03B] font-bold shadow">
             <span>🇪🇹 {formatEthiopianDate(selectedDate, t('amharic') === 'አማርኛ' ? 'am' : 'en', true)}</span>
           </div>
+
+          {/* Dedicated Download Attendance by Date Button */}
+          <button
+            type="button"
+            onClick={() => setIsDownloadModalOpen(true)}
+            className="flex items-center gap-1.5 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#F5A623]/60 rounded-xl px-3 py-1.5 text-xs font-bold transition shadow"
+            title="Download attendance sheet by selecting specific date or range (.docx)"
+          >
+            <Download className="w-4 h-4 text-[#F5A623]" />
+            <span>{t('amharic') === 'አማርኛ' ? 'መገኘት አውርድ' : 'Download Attendance'}</span>
+          </button>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#4A2715] pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#4A2715] pb-2">
         <button
           onClick={() => setActiveTab('take')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
@@ -380,6 +398,20 @@ export const AttendanceView: React.FC = () => {
         >
           <UserCheck className="w-4 h-4" />
           <span>{t('amharic') === 'አማርኛ' ? 'መገኘት መዝግብ' : 'Mark Attendance'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            activeTab === 'analytics'
+              ? 'bg-[#E5921A] text-[#1E0C04] shadow-lg'
+              : 'bg-[#27140B] text-[#CBB39C] hover:text-white border border-[#522B17]'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>
+            {t('amharic') === 'አማርኛ' ? 'የወርሃዊ ግስጋሴ ገበታ' : 'Monthly Progress Chart'}
+          </span>
         </button>
 
         <button
@@ -397,7 +429,7 @@ export const AttendanceView: React.FC = () => {
         </button>
       </div>
 
-      {activeTab === 'take' ? (
+      {activeTab === 'take' && (
         <div className="space-y-4 sm:space-y-6">
           {/* Summary Statistics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -442,6 +474,55 @@ export const AttendanceView: React.FC = () => {
               <span className="text-[10px] font-bold text-[#F5A623] uppercase">Attendance %</span>
               <h3 className="text-lg font-bold text-[#F5A623] mt-0.5">{attendanceRate}%</h3>
             </div>
+          </div>
+
+          {/* Quick Collapsible Monthly Progress Chart Bar */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center bg-[#27140B] border border-[#522B17] px-4 py-2.5 rounded-xl shadow">
+              <button
+                type="button"
+                onClick={() => setShowMonthlyChartInSheet((prev) => !prev)}
+                className="flex items-center gap-2 text-xs font-bold text-white hover:text-[#F5A623] transition cursor-pointer"
+              >
+                <TrendingUp className="w-4 h-4 text-[#F5A623]" />
+                <span>
+                  {t('amharic') === 'አማርኛ'
+                    ? 'የወርሃዊ የተማሪዎች መገኘት ግስጋሴ (Present vs Absent %)'
+                    : 'Monthly Attendance Progress Chart (Present vs Absent %)'}
+                </span>
+                {showMonthlyChartInSheet ? (
+                  <ChevronUp className="w-4 h-4 text-[#CBB39C]" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-[#CBB39C]" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('analytics')}
+                className="text-[11px] font-semibold text-[#F5A623] hover:underline"
+              >
+                {t('amharic') === 'አማርኛ' ? 'ሙሉ ገበታ ይመልከቱ →' : 'View Full Chart →'}
+              </button>
+            </div>
+
+            {showMonthlyChartInSheet && (
+              <AttendanceMonthlyProgressChart
+                records={attendanceRecords}
+                selectedClassId={selectedClassId}
+                className={selectedClass?.name || 'Class'}
+                selectedDate={selectedDate}
+                currentSheetStats={{
+                  total: totalStudents,
+                  present: presentCount,
+                  absent: absentCount,
+                  late: lateCount,
+                  excused: excusedCount,
+                  rate: attendanceRate,
+                }}
+                language={t('amharic') === 'አማርኛ' ? 'am' : 'en'}
+              />
+            )}
           </div>
 
           {message && (
@@ -492,13 +573,13 @@ export const AttendanceView: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={handleDownloadCurrentWordDoc}
+                  onClick={() => setIsDownloadModalOpen(true)}
                   disabled={classStudents.length === 0}
-                  className="px-3 py-1 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#F5A623]/50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow"
-                  title="Download Current Attendance Sheet as Microsoft Word .docx"
+                  className="px-3 py-1 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#F5A623]/60 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow cursor-pointer"
+                  title="Select date and download attendance as Microsoft Word .docx"
                 >
-                  <FileText className="w-3.5 h-3.5 text-[#F5A623]" />
-                  <span>{t('exportWord')}</span>
+                  <Download className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span>{t('amharic') === 'አማርኛ' ? 'ቀን መርጠህ አውርድ (.docx)' : 'Select Date & Download (.docx)'}</span>
                 </button>
               </div>
             </div>
@@ -641,9 +722,48 @@ export const AttendanceView: React.FC = () => {
             </div>
           </div>
         </div>
-      ) : (
-        /* Historical Attendance Tab */
+      )}
+
+      {/* Dedicated Monthly Progress Chart Tab */}
+      {activeTab === 'analytics' && (
         <div className="space-y-4">
+          <AttendanceMonthlyProgressChart
+            records={attendanceRecords}
+            selectedClassId={selectedClassId}
+            className={selectedClass?.name || 'Class'}
+            selectedDate={selectedDate}
+            currentSheetStats={{
+              total: totalStudents,
+              present: presentCount,
+              absent: absentCount,
+              late: lateCount,
+              excused: excusedCount,
+              rate: attendanceRate,
+            }}
+            language={t('amharic') === 'አማርኛ' ? 'am' : 'en'}
+          />
+        </div>
+      )}
+
+      {/* Historical Attendance Tab */}
+      {activeTab === 'history' && (
+        <div className="space-y-4">
+          <AttendanceMonthlyProgressChart
+            records={attendanceRecords}
+            selectedClassId={selectedClassId}
+            className={selectedClass?.name || 'Class'}
+            selectedDate={selectedDate}
+            currentSheetStats={{
+              total: totalStudents,
+              present: presentCount,
+              absent: absentCount,
+              late: lateCount,
+              excused: excusedCount,
+              rate: attendanceRate,
+            }}
+            language={t('amharic') === 'አማርኛ' ? 'am' : 'en'}
+          />
+
           <div className="bg-[#27140B] border border-[#522B17] rounded-2xl shadow-xl p-4 sm:p-6 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#4A2715] pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -651,16 +771,26 @@ export const AttendanceView: React.FC = () => {
                 <span>Historical Attendance Logs ({selectedClass?.name})</span>
               </h3>
 
-              {historyForClass.length > 0 && (
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleDownloadAllHistoryWordDoc}
-                  className="px-3 py-1.5 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#F5A623]/50 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
+                  onClick={() => setIsDownloadModalOpen(true)}
+                  className="px-3 py-1.5 bg-[#351909] hover:bg-[#4A240E] text-[#F7E5C8] border border-[#F5A623]/60 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#F5A623]" />
-                  <span>{t('amharic') === 'አማርኛ' ? 'ሁሉንም በ Word (.docx) አውርድ' : 'Download All History (.docx)'}</span>
+                  <Calendar className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span>{t('amharic') === 'አማርኛ' ? 'ቀን መርጠህ አውርድ' : 'Select Date to Download'}</span>
                 </button>
-              )}
+                {historyForClass.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadAllHistoryWordDoc}
+                    className="px-3 py-1.5 bg-[#27140B] hover:bg-[#351909] text-[#F7E5C8] border border-[#5C321B] hover:border-[#F5A623] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#F5A623]" />
+                    <span>{t('amharic') === 'አማርኛ' ? 'ሁሉንም ታሪክ (.docx)' : 'Download All History (.docx)'}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {historyForClass.length === 0 ? (
@@ -721,6 +851,21 @@ export const AttendanceView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Date-Specific Attendance Download Modal */}
+      <AttendanceDownloadModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        classes={classes}
+        selectedClassId={selectedClassId}
+        onClassChange={(newClassId) => setSelectedClassId(newClassId)}
+        students={students}
+        attendanceRecords={attendanceRecords}
+        currentSelectedDate={selectedDate}
+        currentSheetEntries={sheetEntries}
+        currentUser={user}
+        appLanguage={t('amharic') === 'አማርኛ' ? 'am' : 'en'}
+      />
     </div>
   );
 };
