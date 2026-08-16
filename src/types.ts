@@ -86,6 +86,18 @@ export type BehavioralNoteCategory =
 
 export type BehavioralSeverity = 'POSITIVE' | 'NEUTRAL' | 'WARNING' | 'CRITICAL';
 
+export type BehavioralFlagType =
+  | 'NONE'
+  | 'ATTENDANCE_WARNING'
+  | 'ACADEMIC_ALERT'
+  | 'DISCIPLINARY_ACTION'
+  | 'PASTORAL_CARE'
+  | 'SPECIAL_ATTENTION'
+  | 'MERIT_COMMENDATION';
+
+export type BehavioralFlagStatus = 'ACTIVE' | 'UNDER_REVIEW' | 'RESOLVED';
+export type BehavioralFlagPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL_URGENT';
+
 export interface BehavioralNote {
   id: string;
   studentId: string;
@@ -102,6 +114,16 @@ export interface BehavioralNote {
   academicYear?: string;
   actionTaken?: string;
   followUpRequired?: boolean;
+  isFlag?: boolean;
+  flagType?: BehavioralFlagType;
+  flagStatus?: BehavioralFlagStatus;
+  flagPriority?: BehavioralFlagPriority;
+  shortWarningNote?: string;
+  tags?: string[];
+  resolvedAt?: string;
+  resolvedByUserId?: string;
+  resolvedByUserName?: string;
+  resolutionNotes?: string;
   createdAt: string;
 }
 

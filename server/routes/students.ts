@@ -173,7 +173,7 @@ router.get('/:id/profile', async (req: Request, res: Response) => {
   });
 });
 
-// Behavioral Notes for a student
+// Behavioral Notes and Flags for a student
 router.get('/:id/behavioral-notes', async (req: Request, res: Response) => {
   const { id } = req.params;
   const student = students.find((s) => s.id === id);
@@ -185,7 +185,7 @@ router.get('/:id/behavioral-notes', async (req: Request, res: Response) => {
   res.json({ success: true, data: notes });
 });
 
-// Add Behavioral Note
+// Add Behavioral Note / Flag
 router.post('/:id/behavioral-notes', async (req: Request, res: Response) => {
   const { id } = req.params;
   const student = students.find((s) => s.id === id);
@@ -193,7 +193,12 @@ router.post('/:id/behavioral-notes', async (req: Request, res: Response) => {
     return res.status(404).json({ success: false, message: 'Student not found' });
   }
 
-  const newNote = {
+  const isFlag = req.body.isFlag !== undefined ? Boolean(req.body.isFlag) : req.body.severity === 'WARNING' || req.body.severity === 'CRITICAL';
+  const flagType = req.body.flagType || (isFlag ? 'ACADEMIC_ALERT' : 'NONE');
+  const flagStatus = req.body.flagStatus || (isFlag ? 'ACTIVE' : undefined);
+  const flagPriority = req.body.flagPriority || (req.body.severity === 'CRITICAL' ? 'CRITICAL_URGENT' : req.body.severity === 'WARNING' ? 'HIGH' : 'LOW');
+
+  const newNote: any = {
     id: `note-${Date.now()}`,
     studentId: student.id,
     studentName: `${student.firstName} ${student.lastName}`,
@@ -209,6 +214,12 @@ router.post('/:id/behavioral-notes', async (req: Request, res: Response) => {
     academicYear: req.body.academicYear || student.academicYear || '2025/2026',
     actionTaken: req.body.actionTaken || '',
     followUpRequired: Boolean(req.body.followUpRequired),
+    isFlag,
+    flagType,
+    flagStatus,
+    flagPriority,
+    shortWarningNote: req.body.shortWarningNote || '',
+    tags: Array.isArray(req.body.tags) ? req.body.tags : [],
     createdAt: new Date().toISOString(),
   };
 
@@ -222,14 +233,111 @@ router.post('/:id/behavioral-notes', async (req: Request, res: Response) => {
     userId: newNote.recordedByUserId,
     userName: newNote.recordedByUserName,
     userRole: (newNote.recordedByUserRole as any) || 'TEACHER',
-    action: 'BEHAVIORAL_NOTE_ADDED',
-    details: `Added note for ${student.firstName} ${student.lastName} (${newNote.category}): "${newNote.title}"`,
+    action: isFlag ? 'BEHAVIORAL_FLAG_ATTACHED' : 'BEHAVIORAL_NOTE_ADDED',
+    details: `${isFlag ? 'Attached Behavioral Flag' : 'Added note'} for ${student.firstName} ${student.lastName} [${flagType || newNote.category}]: "${newNote.title}"`,
     ip: '192.168.1.1',
   };
   auditLogs.unshift(logEntry);
   await dbSaveDoc('auditLogs', logEntry.id, logEntry);
 
   res.json({ success: true, data: newNote });
+});
+
+// Quick Attach Flag
+router.post('/:id/quick-flag', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const student = students.find((s) => s.id === id);
+  if (!student) {
+    return res.status(404).json({ success: false, message: 'Student not found' });
+  }
+
+  const flagType = req.body.flagType || 'ATTENDANCE_WARNING';
+  const flagPriority = req.body.flagPriority || 'HIGH';
+  const shortWarningNote = req.body.shortWarningNote || req.body.title || 'Behavioral warning attached';
+
+  const newFlag: any = {
+    id: `flag-${Date.now()}`,
+    studentId: student.id,
+    studentName: `${student.firstName} ${student.lastName}`,
+    studentAmharicName: student.amharicName,
+    title: req.body.title || `Flag: ${flagType.replace(/_/g, ' ')}`,
+    category: req.body.category || (flagType === 'ATTENDANCE_WARNING' ? 'ATTENDANCE_PUNCTUALITY' : flagType === 'ACADEMIC_ALERT' ? 'ACADEMIC_EFFORT' : flagType === 'MERIT_COMMENDATION' ? 'COMMENDATION' : 'DISCIPLINARY'),
+    severity: flagPriority === 'CRITICAL_URGENT' ? 'CRITICAL' : flagPriority === 'HIGH' ? 'WARNING' : flagType === 'MERIT_COMMENDATION' ? 'POSITIVE' : 'NEUTRAL',
+    content: req.body.content || shortWarningNote,
+    shortWarningNote,
+    isFlag: true,
+    flagType,
+    flagStatus: 'ACTIVE',
+    flagPriority,
+    recordedByUserId: req.body.recordedByUserId || 'usr-1',
+    recordedByUserName: req.body.recordedByUserName || 'Academic Staff',
+    recordedByUserRole: req.body.recordedByUserRole || 'TEACHER',
+    date: req.body.date || new Date().toISOString().split('T')[0],
+    academicYear: student.academicYear || '2025/2026',
+    actionTaken: req.body.actionTaken || '',
+    followUpRequired: req.body.followUpRequired !== undefined ? Boolean(req.body.followUpRequired) : true,
+    tags: Array.isArray(req.body.tags) ? req.body.tags : [],
+    createdAt: new Date().toISOString(),
+  };
+
+  behavioralNotes.unshift(newFlag);
+  await dbSaveDoc('behavioralNotes', newFlag.id, newFlag);
+
+  // Audit Log
+  const logEntry = {
+    id: `log-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: newFlag.recordedByUserId,
+    userName: newFlag.recordedByUserName,
+    userRole: (newFlag.recordedByUserRole as any) || 'TEACHER',
+    action: 'BEHAVIORAL_FLAG_ATTACHED',
+    details: `Quick attached ${flagPriority} flag [${flagType}] on student ${student.firstName} ${student.lastName}: "${shortWarningNote}"`,
+    ip: '192.168.1.1',
+  };
+  auditLogs.unshift(logEntry);
+  await dbSaveDoc('auditLogs', logEntry.id, logEntry);
+
+  res.json({ success: true, data: newFlag });
+});
+
+// Update Behavioral Flag Status (Resolve / Reopen / Update Resolution Notes)
+router.patch('/:id/behavioral-notes/:noteId/flag-status', async (req: Request, res: Response) => {
+  const { id, noteId } = req.params;
+  const { flagStatus, resolutionNotes, resolvedByUserId, resolvedByUserName } = req.body;
+
+  const noteIndex = behavioralNotes.findIndex((n) => n.id === noteId);
+  if (noteIndex === -1) {
+    return res.status(404).json({ success: false, message: 'Note / Flag not found' });
+  }
+
+  const existing = behavioralNotes[noteIndex];
+  const updatedNote = {
+    ...existing,
+    flagStatus: flagStatus || existing.flagStatus || 'RESOLVED',
+    resolutionNotes: resolutionNotes !== undefined ? resolutionNotes : existing.resolutionNotes,
+    resolvedAt: flagStatus === 'RESOLVED' ? (existing.resolvedAt || new Date().toISOString()) : (flagStatus === 'ACTIVE' ? undefined : existing.resolvedAt),
+    resolvedByUserId: flagStatus === 'RESOLVED' ? (resolvedByUserId || existing.resolvedByUserId) : undefined,
+    resolvedByUserName: flagStatus === 'RESOLVED' ? (resolvedByUserName || existing.resolvedByUserName) : undefined,
+  };
+
+  behavioralNotes[noteIndex] = updatedNote;
+  await dbSaveDoc('behavioralNotes', updatedNote.id, updatedNote);
+
+  // Audit Log
+  const logEntry = {
+    id: `log-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: resolvedByUserId || 'usr-1',
+    userName: resolvedByUserName || 'Staff',
+    userRole: 'ADMIN' as any,
+    action: 'BEHAVIORAL_FLAG_STATUS_UPDATED',
+    details: `Updated flag status of "${updatedNote.title}" to ${updatedNote.flagStatus} for student ${updatedNote.studentName || id}`,
+    ip: '192.168.1.1',
+  };
+  auditLogs.unshift(logEntry);
+  await dbSaveDoc('auditLogs', logEntry.id, logEntry);
+
+  res.json({ success: true, data: updatedNote });
 });
 
 // Delete Behavioral Note

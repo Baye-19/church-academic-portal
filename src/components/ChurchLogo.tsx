@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ChurchLogoProps {
   className?: string;
@@ -6,6 +6,8 @@ interface ChurchLogoProps {
 }
 
 export const ChurchLogo: React.FC<ChurchLogoProps> = ({ className = '', size = 'md' }) => {
+  const [imgError, setImgError] = useState(false);
+
   const sizeMap = {
     sm: 'w-8 h-8',
     md: 'w-10 h-10',
@@ -17,11 +19,20 @@ export const ChurchLogo: React.FC<ChurchLogoProps> = ({ className = '', size = '
 
   return (
     <div className={`relative rounded-full border-2 border-[#F5A623] bg-[#180B05] p-0.5 shadow-lg overflow-hidden shrink-0 flex items-center justify-center ${selectedSize}`}>
-      <svg
-        viewBox="0 0 300 300"
-        className="w-full h-full text-[#F5A623]"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+      {!imgError ? (
+        <img
+          src="/logo.jpg"
+          alt="Haymete Abrham Sunday School Logo"
+          className="w-full h-full object-cover rounded-full"
+          referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <svg
+          viewBox="0 0 300 300"
+          className="w-full h-full text-[#F5A623]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
         <defs>
           <path
             id="topArcPath"
@@ -161,6 +172,7 @@ export const ChurchLogo: React.FC<ChurchLogoProps> = ({ className = '', size = '
           </text>
         </g>
       </svg>
+      )}
     </div>
   );
 };

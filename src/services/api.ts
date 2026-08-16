@@ -120,6 +120,33 @@ export const api = {
     return res.json();
   },
 
+  async quickAttachBehavioralFlag(studentId: string, flagData: Partial<BehavioralNote>): Promise<{ success: boolean; data: BehavioralNote }> {
+    const res = await fetch(`/api/students/${studentId}/quick-flag`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(flagData),
+    });
+    return res.json();
+  },
+
+  async updateBehavioralFlagStatus(
+    studentId: string,
+    noteId: string,
+    payload: {
+      flagStatus: 'ACTIVE' | 'UNDER_REVIEW' | 'RESOLVED';
+      resolutionNotes?: string;
+      resolvedByUserId?: string;
+      resolvedByUserName?: string;
+    }
+  ): Promise<{ success: boolean; data: BehavioralNote }> {
+    const res = await fetch(`/api/students/${studentId}/behavioral-notes/${noteId}/flag-status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return res.json();
+  },
+
   async deleteStudentBehavioralNote(studentId: string, noteId: string): Promise<{ success: boolean; message: string }> {
     const res = await fetch(`/api/students/${studentId}/behavioral-notes/${noteId}`, {
       method: 'DELETE',
