@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
-import { AcademicClass, Student } from '../types';
+import { AcademicClass, Course, Student } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
-import { Users, Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, FileText, UserCheck } from 'lucide-react';
+import { filterAccessibleClasses, getAccessibleClassIds, hasFullClassAccess } from '../utils/accessControl';
+import { Users, Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, FileText, UserCheck, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { StudentProfileModal } from './StudentProfileModal';
 
 export const StudentsView: React.FC = () => {
+  const { user } = useAuth();
   const { t, language } = useLanguage();
   const toast = useToast();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<AcademicClass[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [search, setSearch] = useState('');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,9 +37,15 @@ export const StudentsView: React.FC = () => {
   });
 
   const loadData = () => {
-    Promise.all([api.getStudents(), api.getClasses()]).then(([stdRes, clsRes]) => {
+    Promise.all([api.getStudents(), api.getClasses(), api.getCourses()]).then(([stdRes, clsRes, crsRes]) => {
       if (stdRes.success) setStudents(stdRes.data);
-      if (clsRes.success) setClasses(clsRes.data);
+      if (clsRes.success) {
+        setClasses(clsRes.data);
+        if (clsRes.data.length > 0) {
+          setFormData((prev) => ({ ...prev, classId: clsRes.data[0].id }));
+        }
+      }
+      if (crsRes.success) setCourses(crsRes.data);
     });
   };
 
@@ -43,8 +53,17 @@ export const StudentsView: React.FC = () => {
     loadData();
   }, []);
 
+  const visibleClasses = filterAccessibleClasses(classes, user, courses);
+  const accessibleClassIds = getAccessibleClassIds(user, courses, classes);
+  const isTeacherRestricted = user?.role === 'TEACHER' && !hasFullClassAccess(user);
+
   const filteredStudents = students
     .filter((s) => {
+      // Scope constraint: teacher only sees students in accessible classes
+      if (isTeacherRestricted && !accessibleClassIds.has(s.classId || '')) {
+        return false;
+      }
+
       const matchesSearch =
         s.firstName.toLowerCase().includes(search.toLowerCase()) ||
         s.lastName.toLowerCase().includes(search.toLowerCase()) ||
@@ -121,6 +140,46 @@ export const StudentsView: React.FC = () => {
         </button>
       </div>
 
+      {/* Teacher Role-Based Access Banner */}
+      {user?.role === 'TEACHER' && (
+        <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs ${
+          hasFullClassAccess(user)
+            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+            : 'bg-amber-950/40 border-amber-500/30 text-[#F5A623]'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            {hasFullClassAccess(user) ? (
+              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            ) : (
+              <ShieldAlert className="w-5 h-5 text-[#F5A623] shrink-0" />
+            )}
+            <div>
+              <span className="font-bold">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'የሁሉም ተማሪዎች ሙሉ መረጃ ፈቃድ'
+                    : 'Full Student Directory Access'
+                  : language === 'am'
+                  ? `የተመደቡባቸው ክፍሎች ተማሪዎች ብቻ (${visibleClasses.length} ክፍሎች)`
+                  : `Assigned Classes Students Only (${visibleClasses.length} classes)`}
+              </span>
+              <p className="text-[11px] opacity-80 mt-0.5">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'አስተዳዳሪው የሁሉንም 8 ክፍሎች ተማሪዎች መረጃ እንዲያዩ ሙሉ ፈቃድ ሰጥቶዎታል'
+                    : 'You have full authorization to view and evaluate all students across the school.'
+                  : language === 'am'
+                  ? 'የተመደቡባቸውን ክፍሎች ተማሪዎች ብቻ ማየት እና መመዝገብ ይችላሉ።'
+                  : 'You can only view and manage students belonging to your specifically assigned classes.'}
+              </p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 bg-black/40 rounded-lg text-[10px] font-mono font-bold shrink-0">
+            {filteredStudents.length} Students Available
+          </span>
+        </div>
+      )}
+
       {/* Search and Class Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-850 p-4 border border-slate-800 rounded-2xl shadow-lg">
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
@@ -148,8 +207,10 @@ export const StudentsView: React.FC = () => {
               }}
               className="px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
             >
-              <option value="all">All Academic Classes</option>
-              {classes.map((c) => (
+              <option value="all">
+                {visibleClasses.length === classes.length ? 'All Academic Classes' : `All Assigned Classes (${visibleClasses.length})`}
+              </option>
+              {visibleClasses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} ({c.amharicName})
                 </option>
@@ -328,9 +389,9 @@ export const StudentsView: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white"
                   >
-                    {classes.map((c) => (
+                    {visibleClasses.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name}
+                        {c.name} ({c.amharicName})
                       </option>
                     ))}
                   </select>

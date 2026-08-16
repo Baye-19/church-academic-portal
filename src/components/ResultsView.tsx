@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { Course } from '../types';
+import { filterAccessibleCourses } from '../utils/accessControl';
 import { AllCoursesResultsTable } from './AllCoursesResultsTable';
 import {
   Award,
@@ -28,13 +29,8 @@ export const ResultsView: React.FC = () => {
   useEffect(() => {
     api.getCourses().then((res) => {
       if (res.success && res.data.length > 0) {
-        // Teacher sees only their assigned courses
-        const available =
-          user?.role === 'TEACHER'
-            ? res.data.filter(
-                (c) => c.teacherId === user.id || c.teacherName === user.name
-              )
-            : res.data;
+        // Teacher sees their assigned courses or all if authorized
+        const available = filterAccessibleCourses(res.data, user);
 
         setCourses(available);
         if (available.length > 0) {

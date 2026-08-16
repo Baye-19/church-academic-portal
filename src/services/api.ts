@@ -12,6 +12,26 @@ import {
   User,
 } from '../types';
 
+function getAuthHeaders(customHeaders?: Record<string, string>): HeadersInit {
+  const token = typeof window !== 'undefined' ? sessionStorage.getItem('amras_token') : null;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(customHeaders || {}),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const customHeaders = (init?.headers as Record<string, string>) || {};
+  return fetch(input, {
+    ...init,
+    headers: getAuthHeaders(customHeaders),
+  });
+}
+
 export const api = {
   async login(email: string, password?: string) {
     const res = await fetch('/api/auth/login', {
@@ -22,108 +42,113 @@ export const api = {
     return res.json();
   },
 
+  async verifySession(): Promise<{ success: boolean; user?: User; data?: User }> {
+    const res = await authFetch('/api/auth/me');
+    return res.json();
+  },
+
   async getUsers(): Promise<{ success: boolean; data: User[] }> {
-    const res = await fetch('/api/users');
+    const res = await authFetch('/api/users');
     return res.json();
   },
 
   async createUser(userData: Partial<User>) {
-    const res = await fetch('/api/users', {
+    const res = await authFetch('/api/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+    return res.json();
+  },
+
+  async updateUser(id: string, userData: Partial<User>) {
+    const res = await authFetch(`/api/users/${id}/profile`, {
+      method: 'PUT',
       body: JSON.stringify(userData),
     });
     return res.json();
   },
 
   async getClasses() {
-    const res = await fetch('/api/classes');
+    const res = await authFetch('/api/classes');
     return res.json();
   },
 
   async createClass(classData: Partial<AcademicClass>) {
-    const res = await fetch('/api/classes', {
+    const res = await authFetch('/api/classes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(classData),
     });
     return res.json();
   },
 
   async updateClass(id: string, classData: Partial<AcademicClass>) {
-    const res = await fetch(`/api/classes/${id}`, {
+    const res = await authFetch(`/api/classes/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(classData),
     });
     return res.json();
   },
 
   async getAcademicYears(): Promise<{ success: boolean; data: string[] }> {
-    const res = await fetch('/api/academic-years');
+    const res = await authFetch('/api/academic-years');
     return res.json();
   },
 
   async addAcademicYear(year: string) {
-    const res = await fetch('/api/academic-years', {
+    const res = await authFetch('/api/academic-years', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ year }),
     });
     return res.json();
   },
 
   async getCourses(): Promise<{ success: boolean; data: Course[] }> {
-    const res = await fetch('/api/courses');
+    const res = await authFetch('/api/courses');
     return res.json();
   },
 
   async createCourse(courseData: Partial<Course>) {
-    const res = await fetch('/api/courses', {
+    const res = await authFetch('/api/courses', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(courseData),
     });
     return res.json();
   },
 
   async updateCourse(id: string, courseData: Partial<Course>) {
-    const res = await fetch(`/api/courses/${id}`, {
+    const res = await authFetch(`/api/courses/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(courseData),
     });
     return res.json();
   },
 
   async getStudents(): Promise<{ success: boolean; data: Student[] }> {
-    const res = await fetch('/api/students');
+    const res = await authFetch('/api/students');
     return res.json();
   },
 
   async getStudentProfile(studentId: string): Promise<{ success: boolean; data: StudentProfileData }> {
-    const res = await fetch(`/api/students/${studentId}/profile`);
+    const res = await authFetch(`/api/students/${studentId}/profile`);
     return res.json();
   },
 
   async getStudentBehavioralNotes(studentId: string): Promise<{ success: boolean; data: BehavioralNote[] }> {
-    const res = await fetch(`/api/students/${studentId}/behavioral-notes`);
+    const res = await authFetch(`/api/students/${studentId}/behavioral-notes`);
     return res.json();
   },
 
   async createStudentBehavioralNote(studentId: string, noteData: Partial<BehavioralNote>): Promise<{ success: boolean; data: BehavioralNote }> {
-    const res = await fetch(`/api/students/${studentId}/behavioral-notes`, {
+    const res = await authFetch(`/api/students/${studentId}/behavioral-notes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(noteData),
     });
     return res.json();
   },
 
   async quickAttachBehavioralFlag(studentId: string, flagData: Partial<BehavioralNote>): Promise<{ success: boolean; data: BehavioralNote }> {
-    const res = await fetch(`/api/students/${studentId}/quick-flag`, {
+    const res = await authFetch(`/api/students/${studentId}/quick-flag`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(flagData),
     });
     return res.json();
@@ -139,25 +164,23 @@ export const api = {
       resolvedByUserName?: string;
     }
   ): Promise<{ success: boolean; data: BehavioralNote }> {
-    const res = await fetch(`/api/students/${studentId}/behavioral-notes/${noteId}/flag-status`, {
+    const res = await authFetch(`/api/students/${studentId}/behavioral-notes/${noteId}/flag-status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     return res.json();
   },
 
   async deleteStudentBehavioralNote(studentId: string, noteId: string): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`/api/students/${studentId}/behavioral-notes/${noteId}`, {
+    const res = await authFetch(`/api/students/${studentId}/behavioral-notes/${noteId}`, {
       method: 'DELETE',
     });
     return res.json();
   },
 
   async createStudent(studentData: Partial<Student>) {
-    const res = await fetch('/api/students', {
+    const res = await authFetch('/api/students', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(studentData),
     });
     return res.json();
@@ -165,99 +188,93 @@ export const api = {
 
   async getMarks(courseId?: string): Promise<{ success: boolean; data: Mark[] }> {
     const url = courseId ? `/api/marks?courseId=${courseId}` : '/api/marks';
-    const res = await fetch(url);
+    const res = await authFetch(url);
     return res.json();
   },
 
   async saveMarks(courseId: string, entries: any[], isSubmit: boolean, teacherId?: string, teacherName?: string) {
-    const res = await fetch('/api/marks/save', {
+    const res = await authFetch('/api/marks/save', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ courseId, entries, isSubmit, teacherId, teacherName }),
     });
     return res.json();
   },
 
   async getResultAnalysis(courseId: string) {
-    const res = await fetch(`/api/results/course/${courseId}`);
+    const res = await authFetch(`/api/results/course/${courseId}`);
     return res.json();
   },
 
   async getSubmissions(): Promise<{ success: boolean; data: SubmissionReview[] }> {
-    const res = await fetch('/api/submissions');
+    const res = await authFetch('/api/submissions');
     return res.json();
   },
 
   async approveSubmission(id: string, reviewerId?: string, reviewerName?: string) {
-    const res = await fetch(`/api/submissions/${id}/approve`, {
+    const res = await authFetch(`/api/submissions/${id}/approve`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reviewerId, reviewerName }),
     });
     return res.json();
   },
 
   async rejectSubmission(id: string, reason: string, reviewerId?: string, reviewerName?: string) {
-    const res = await fetch(`/api/submissions/${id}/reject`, {
+    const res = await authFetch(`/api/submissions/${id}/reject`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason, reviewerId, reviewerName }),
     });
     return res.json();
   },
 
   async getSchedules(): Promise<{ success: boolean; data: ScheduleItem[] }> {
-    const res = await fetch('/api/schedules');
+    const res = await authFetch('/api/schedules');
     return res.json();
   },
 
   async createSchedule(schedData: Partial<ScheduleItem>) {
-    const res = await fetch('/api/schedules', {
+    const res = await authFetch('/api/schedules', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(schedData),
     });
     return res.json();
   },
 
   async deleteSchedule(id: string) {
-    const res = await fetch(`/api/schedules/${id}`, {
+    const res = await authFetch(`/api/schedules/${id}`, {
       method: 'DELETE',
     });
     return res.json();
   },
 
   async updateUserProfile(userId: string, data: Partial<User>) {
-    const res = await fetch(`/api/users/${userId}/profile`, {
+    const res = await authFetch(`/api/users/${userId}/profile`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     return res.json();
   },
 
   async updateSchedule(id: string, schedData: Partial<ScheduleItem>) {
-    const res = await fetch(`/api/schedules/${id}`, {
+    const res = await authFetch(`/api/schedules/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(schedData),
     });
     return res.json();
   },
 
   async getAuditLogs() {
-    const res = await fetch('/api/audit-logs');
+    const res = await authFetch('/api/audit-logs');
     return res.json();
   },
 
   async getNotifications(userId?: string) {
     const url = userId ? `/api/notifications?userId=${userId}` : '/api/notifications';
-    const res = await fetch(url);
+    const res = await authFetch(url);
     return res.json();
   },
 
   async markNotificationRead(id: string) {
-    const res = await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+    const res = await authFetch(`/api/notifications/${id}/read`, { method: 'POST' });
     return res.json();
   },
 
@@ -267,7 +284,7 @@ export const api = {
     if (classId) params.append('classId', classId);
     if (date) params.append('date', date);
     if (params.toString()) url += `?${params.toString()}`;
-    const res = await fetch(url);
+    const res = await authFetch(url);
     return res.json();
   },
 
@@ -280,9 +297,8 @@ export const api = {
     takenByUserName: string;
     entries: any[];
   }) {
-    const res = await fetch('/api/attendance', {
+    const res = await authFetch('/api/attendance', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     return res.json();
@@ -297,30 +313,28 @@ export const api = {
       if (params.type) q.append('type', params.type);
       if (q.toString()) url += `?${q.toString()}`;
     }
-    const res = await fetch(url);
+    const res = await authFetch(url);
     return res.json();
   },
 
   async createAcademicCalendarEvent(eventData: Partial<AcademicCalendarEvent>) {
-    const res = await fetch('/api/academic-calendar', {
+    const res = await authFetch('/api/academic-calendar', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(eventData),
     });
     return res.json();
   },
 
   async updateAcademicCalendarEvent(id: string, eventData: Partial<AcademicCalendarEvent>) {
-    const res = await fetch(`/api/academic-calendar/${id}`, {
+    const res = await authFetch(`/api/academic-calendar/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(eventData),
     });
     return res.json();
   },
 
   async deleteAcademicCalendarEvent(id: string) {
-    const res = await fetch(`/api/academic-calendar/${id}`, {
+    const res = await authFetch(`/api/academic-calendar/${id}`, {
       method: 'DELETE',
     });
     return res.json();

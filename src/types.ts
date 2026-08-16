@@ -19,6 +19,9 @@ export interface User {
   department: string;
   avatar?: string;
   createdAt?: string;
+  assignedClassIds?: string[];
+  assignedCourseIds?: string[];
+  canAccessAllClasses?: boolean;
 }
 
 export interface AcademicClass {

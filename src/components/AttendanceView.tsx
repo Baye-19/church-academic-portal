@@ -3,9 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
-import { AcademicClass, AttendanceRecord, AttendanceStatus, Student } from '../types';
+import { AcademicClass, AttendanceRecord, AttendanceStatus, Course, Student } from '../types';
 import { formatEthiopianDate, formatEthiopianDateTime } from '../utils/ethiopianCalendar';
 import { exportAttendanceToWord, exportAttendanceHistoryToWord } from '../utils/wordExport';
+import { filterAccessibleClasses, hasFullClassAccess } from '../utils/accessControl';
 import { AttendanceMonthlyProgressChart } from './AttendanceMonthlyProgressChart';
 import { AttendanceDownloadModal } from './AttendanceDownloadModal';
 import {
@@ -25,6 +26,8 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const AttendanceView: React.FC = () => {
@@ -71,21 +74,12 @@ export const AttendanceView: React.FC = () => {
     Promise.all([api.getClasses(), api.getStudents(), api.getAttendance(), api.getCourses()]).then(
       ([clsRes, stdRes, attRes, crsRes]) => {
         if (clsRes.success && clsRes.data.length > 0) {
-          let availableClasses = clsRes.data;
-          if (user?.role === 'TEACHER' && crsRes.success) {
-            const myCourses = crsRes.data.filter(
-              (c) => c.teacherId === user.id || c.teacherName === user.name
-            );
-            const myClassIds = new Set(myCourses.map((c) => c.classId));
-            const filtered = clsRes.data.filter((c) => myClassIds.has(c.id));
-            if (filtered.length > 0) {
-              availableClasses = filtered;
-            }
-          }
+          const coursesList = crsRes.success ? crsRes.data : [];
+          const accessibleClasses = filterAccessibleClasses(clsRes.data, user, coursesList);
 
-          setClasses(availableClasses);
-          if (!selectedClassId && availableClasses.length > 0) {
-            setSelectedClassId(availableClasses[0].id);
+          setClasses(accessibleClasses);
+          if (accessibleClasses.length > 0) {
+            setSelectedClassId(accessibleClasses[0].id);
           }
         }
         if (stdRes.success) {
@@ -327,6 +321,46 @@ export const AttendanceView: React.FC = () => {
 
   return (
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 text-[#F7E5C8]">
+      {/* Teacher Role-Based Access Banner */}
+      {user?.role === 'TEACHER' && (
+        <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs ${
+          hasFullClassAccess(user)
+            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+            : 'bg-amber-950/40 border-amber-500/30 text-[#F5A623]'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            {hasFullClassAccess(user) ? (
+              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            ) : (
+              <ShieldAlert className="w-5 h-5 text-[#F5A623] shrink-0" />
+            )}
+            <div>
+              <span className="font-bold">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'የሁሉም ክፍሎች የመገኘት መከታተያ ፈቃድ'
+                    : 'Full Class Attendance Authority'
+                  : language === 'am'
+                  ? `የተመደቡባቸው ክፍሎች ብቻ (${classes.length} ክፍሎች)`
+                  : `Specifically Assigned Classes Attendance (${classes.length} classes)`}
+              </span>
+              <p className="text-[11px] opacity-80 mt-0.5">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'አስተዳዳሪው ሁሉንም 8 ክፍሎች አቴንዳንስ እንዲመዘግቡ ሙሉ ፈቃድ ሰጥቶዎታል'
+                    : 'You have full authorization to record and export attendance for all 8 classes.'
+                  : language === 'am'
+                  ? 'የተመደቡባቸውን ክፍሎች ብቻ አቴንዳንስ መመዝገብ ይችላሉ።'
+                  : 'You can only take attendance for specifically assigned classes.'}
+              </p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 bg-black/40 rounded-lg text-[10px] font-mono font-bold shrink-0">
+            {classes.length} Available Classes
+          </span>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-[#4A2715]">
         <div>

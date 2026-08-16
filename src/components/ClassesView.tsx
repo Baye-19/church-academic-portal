@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, Course, Student } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
+import { filterAccessibleClasses, hasFullClassAccess } from '../utils/accessControl';
 import {
   GraduationCap,
   BookOpen,
@@ -20,6 +21,8 @@ import {
   Calendar,
   Users,
   UserPlus,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const ClassesView: React.FC = () => {
@@ -271,6 +274,14 @@ export const ClassesView: React.FC = () => {
     }
   };
 
+  const visibleClasses = filterAccessibleClasses(classes, user, courses);
+
+  useEffect(() => {
+    if (visibleClasses.length > 0 && (!expandedClassId || !visibleClasses.some((c) => c.id === expandedClassId))) {
+      setExpandedClassId(visibleClasses[0].id);
+    }
+  }, [classes, user, courses]);
+
   return (
     <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Alert Notification */}
@@ -278,6 +289,46 @@ export const ClassesView: React.FC = () => {
         <div className="p-3.5 bg-amber-500/20 border border-amber-500/40 text-[#F5A623] text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg animate-fade-in">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{alertMessage}</span>
+        </div>
+      )}
+
+      {/* Teacher Role-Based Access Banner */}
+      {user?.role === 'TEACHER' && (
+        <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs ${
+          hasFullClassAccess(user)
+            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+            : 'bg-amber-950/40 border-amber-500/30 text-[#F5A623]'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            {hasFullClassAccess(user) ? (
+              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            ) : (
+              <ShieldAlert className="w-5 h-5 text-[#F5A623] shrink-0" />
+            )}
+            <div>
+              <span className="font-bold">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'የሁሉም ክፍሎች ሙሉ ፈቃድ/ሥልጣን ተሰጥቷል'
+                    : 'Full Class Authority Granted'
+                  : language === 'am'
+                  ? `የተመደቡባቸው ክፍሎች ብቻ (${visibleClasses.length} ክፍሎች)`
+                  : `Specifically Assigned Classes (${visibleClasses.length} assigned)`}
+              </span>
+              <p className="text-[11px] opacity-80 mt-0.5">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'አስተዳዳሪው ሁሉንም 8 ክፍሎች እንዲያስተዳድሩ ሙሉ ፈቃድ ሰጥቶዎታል'
+                    : 'Administrator has granted you authority to view and manage all 8 Sunday school classes.'
+                  : language === 'am'
+                  ? 'የተመደቡባቸውን ክፍሎች ብቻ ማየት እና ማስተዳደር ይችላሉ። ተጨማሪ ክፍል ፈቃድ ለማግኘት አስተዳዳሪውን ያነጋግሩ።'
+                  : 'You can only view and manage your assigned classes. Contact admin if you require access to other classes.'}
+              </p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 bg-black/40 rounded-lg text-[10px] font-mono font-bold shrink-0">
+            {visibleClasses.length} / {classes.length} Classes
+          </span>
         </div>
       )}
 
@@ -328,7 +379,20 @@ export const ClassesView: React.FC = () => {
 
       {/* Academic Classes Accordion List */}
       <div className="grid grid-cols-1 gap-4">
-        {classes.map((cls) => {
+        {visibleClasses.length === 0 ? (
+          <div className="p-8 text-center bg-[#27140B] border border-[#522B17] rounded-2xl">
+            <GraduationCap className="w-12 h-12 text-[#8C6D58] mx-auto mb-3" />
+            <h3 className="text-base font-bold text-white mb-1">
+              {language === 'am' ? 'ምንም የተመደበ ክፍል የለም' : 'No Classes Assigned'}
+            </h3>
+            <p className="text-xs text-[#CBB39C]">
+              {language === 'am'
+                ? 'እስካሁን ምንም ክፍል አልተመደበልዎትም። እባክዎ ክፍል እንዲመደብልዎ አስተዳዳሪውን ያነጋግሩ።'
+                : 'You have not been assigned to any classes yet. Please contact the administrator to assign classes.'}
+            </p>
+          </div>
+        ) : (
+          visibleClasses.map((cls) => {
           const classCourses = courses.filter((c) => c.classId === cls.id);
           const classStudents = students
             .filter((s) => s.classId === cls.id || s.className === cls.name)
@@ -538,7 +602,7 @@ export const ClassesView: React.FC = () => {
               )}
             </div>
           );
-        })}
+        }))}
       </div>
 
       {/* Modal 1: Add or Edit Class */}

@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import { AcademicClass, Course, ScheduleItem, Student, SubmissionReview, AcademicCalendarEvent } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
 import { getEthiopianAcademicYearLabel, formatEthiopianDateTime, formatEthiopianDate, formatTimeStringToEthiopian } from '../utils/ethiopianCalendar';
+import { filterAccessibleClasses, filterAccessibleCourses, getAccessibleClassIds, hasFullClassAccess } from '../utils/accessControl';
 import {
   Users,
   UserCheck,
@@ -20,6 +21,8 @@ import {
   Sparkles,
   Layers,
   ChevronRight,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -60,14 +63,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     });
   }, []);
 
+  const accessibleClasses = filterAccessibleClasses(classes, user, courses);
+  const accessibleCourses = filterAccessibleCourses(courses, user);
+  const accessibleClassIds = getAccessibleClassIds(user, courses, classes);
+
   const pendingSubmissions = submissions.filter((s) => s.status === 'SUBMITTED' || s.status === 'UNDER_REVIEW');
-  const myCourses = courses.filter((c) => c.teacherId === user?.id || c.teacherName === user?.name);
+  const myCourses = accessibleCourses;
   const mySchedule = schedules.filter((s) => s.teacherId === user?.id || s.teacherName === user?.name);
 
   // Student analytics calculations
-  const totalStudentsCount = students.length;
-  const maleStudentsCount = students.filter((s) => s.gender === 'Male').length;
-  const femaleStudentsCount = students.filter((s) => s.gender === 'Female').length;
+  const accessibleStudents =
+    user?.role === 'TEACHER' && !hasFullClassAccess(user)
+      ? students.filter((s) => accessibleClassIds.has(s.classId))
+      : students;
+  const totalStudentsCount = accessibleStudents.length;
+  const maleStudentsCount = accessibleStudents.filter((s) => s.gender === 'Male').length;
+  const femaleStudentsCount = accessibleStudents.filter((s) => s.gender === 'Female').length;
 
   if (loading) {
     return (
@@ -89,9 +100,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           <h2 className="text-2xl font-bold text-white tracking-tight font-serif">
             {t('welcomeBack')}, {language === 'am' && user?.amharicName ? user.amharicName : user?.name}!
           </h2>
-          <p className="text-xs text-[#CBB39C] mt-1">
-            {t('departmentName')} — Logged in as <span className="font-bold text-[#F5A623]">{user?.role}</span>
-          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-[#CBB39C]">
+            <span>{t('departmentName')} — Logged in as <strong className="text-[#F5A623]">{user?.role}</strong></span>
+            {user?.role === 'TEACHER' && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${
+                hasFullClassAccess(user)
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+              }`}>
+                {hasFullClassAccess(user) ? (
+                  <>
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>{language === 'am' ? 'የሁሉም ክፍሎች ፈቃድ' : 'Full Class Authority'}</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldAlert className="w-3 h-3" />
+                    <span>{language === 'am' ? `የተመደቡባቸው (${accessibleClasses.length} ክፍሎች)` : `Assigned Only (${accessibleClasses.length} Classes)`}</span>
+                  </>
+                )}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -142,8 +172,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         >
           <div>
             <span className="text-[11px] font-bold text-[#CBB39C] uppercase tracking-wider">{t('totalClasses')}</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{classes.length || 8}</h3>
-            <span className="text-[10px] text-[#F5A623] font-semibold">Active Sunday School Levels 1-8</span>
+            <h3 className="text-2xl font-extrabold text-white mt-1">
+              {user?.role === 'TEACHER' ? accessibleClasses.length : (classes.length || 8)}
+            </h3>
+            <span className="text-[10px] text-[#F5A623] font-semibold">
+              {user?.role === 'TEACHER' 
+                ? (hasFullClassAccess(user) ? 'Full Access: Levels 1-8' : `Assigned: ${accessibleClasses.length} Class Levels`)
+                : 'Active Sunday School Levels 1-8'}
+            </span>
           </div>
           <div className="p-3 bg-[#180B05] border border-[#522B17] rounded-xl text-[#F5A623]">
             <GraduationCap className="w-6 h-6" />

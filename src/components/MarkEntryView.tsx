@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { Course, Student, AssessmentColumn } from '../types';
+import { filterAccessibleCourses, hasFullClassAccess } from '../utils/accessControl';
 import {
   FileSpreadsheet,
   Save,
@@ -16,6 +17,8 @@ import {
   Plus,
   Trash2,
   X,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const MarkEntryView: React.FC = () => {
@@ -41,13 +44,8 @@ export const MarkEntryView: React.FC = () => {
   useEffect(() => {
     Promise.all([api.getCourses(), api.getStudents()]).then(([crsRes, stdRes]) => {
       if (crsRes.success && crsRes.data.length > 0) {
-        // Teachers ONLY see courses they teach!
-        const available =
-          user?.role === 'TEACHER'
-            ? crsRes.data.filter(
-                (c) => c.teacherId === user.id || c.teacherName === user.name
-              )
-            : crsRes.data;
+        // Use RBAC filter for accessible courses
+        const available = filterAccessibleCourses(crsRes.data, user);
 
         setCourses(available);
         if (available.length > 0) {

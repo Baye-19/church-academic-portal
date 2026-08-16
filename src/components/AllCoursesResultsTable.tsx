@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { Course, Mark, Student } from '../types';
+import { AcademicClass, Course, Mark, Student } from '../types';
+import { filterAccessibleClasses, filterAccessibleCourses, hasFullClassAccess } from '../utils/accessControl';
 import {
   FileSpreadsheet,
   Search,
@@ -14,7 +16,9 @@ import {
 } from 'lucide-react';
 
 export const AllCoursesResultsTable: React.FC = () => {
+  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [marks, setMarks] = useState<Mark[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,22 +31,27 @@ export const AllCoursesResultsTable: React.FC = () => {
   useEffect(() => {
     Promise.all([
       api.getCourses(),
+      api.getClasses(),
       api.getMarks(),
       api.getStudents(),
-    ]).then(([crsRes, mrkRes, stdRes]) => {
+    ]).then(([crsRes, clsRes, mrkRes, stdRes]) => {
       if (crsRes.success) setCourses(crsRes.data);
+      if (clsRes.success) setClasses(clsRes.data);
       if (mrkRes.success) setMarks(mrkRes.data);
       if (stdRes.success) setStudents(stdRes.data);
       setLoading(false);
     });
   }, []);
 
+  const accessibleCourses = filterAccessibleCourses(courses, user);
+  const accessibleClasses = filterAccessibleClasses(classes, user, courses);
+
   // Map courses by ID
   const courseMap = new Map<string, Course>();
-  courses.forEach((c) => courseMap.set(c.id, c));
+  accessibleCourses.forEach((c) => courseMap.set(c.id, c));
 
-  // Determine active courses for selected class (or all courses)
-  const relevantCourses = courses.filter((c) => {
+  // Determine active courses for selected class (or all accessible courses)
+  const relevantCourses = accessibleCourses.filter((c) => {
     if (selectedClassId === 'ALL') return true;
     return c.classId === selectedClassId;
   });
@@ -314,15 +323,14 @@ export const AllCoursesResultsTable: React.FC = () => {
                 onChange={(e) => setSelectedClassId(e.target.value)}
                 className="bg-transparent text-xs font-bold text-[#F5A623] focus:outline-none"
               >
-                <option value="ALL">All Classes</option>
-                <option value="cls-1">Class 1</option>
-                <option value="cls-2">Class 2</option>
-                <option value="cls-3">Class 3</option>
-                <option value="cls-4">Class 4</option>
-                <option value="cls-5">Class 5</option>
-                <option value="cls-6">Class 6</option>
-                <option value="cls-7">Class 7</option>
-                <option value="cls-8">Class 8</option>
+                <option value="ALL">
+                  {accessibleClasses.length === classes.length ? 'All Classes' : `All Assigned (${accessibleClasses.length})`}
+                </option>
+                {accessibleClasses.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name} ({cls.amharicName})
+                  </option>
+                ))}
               </select>
             </div>
 

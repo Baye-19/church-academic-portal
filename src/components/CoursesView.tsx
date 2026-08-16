@@ -5,7 +5,8 @@ import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, Course, User } from '../types';
 import { getCurrentAcademicYear } from '../utils/academicYear';
-import { BookOpen, Plus, Search, CheckCircle2, UserCheck, Pencil } from 'lucide-react';
+import { filterAccessibleClasses, filterAccessibleCourses, hasFullClassAccess } from '../utils/accessControl';
+import { BookOpen, Plus, Search, CheckCircle2, UserCheck, Pencil, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 export const CoursesView: React.FC = () => {
   const { user } = useAuth();
@@ -70,12 +71,9 @@ export const CoursesView: React.FC = () => {
   const coordinators = users.filter((u) => u.role === 'COORDINATOR' || u.role === 'DEPT_HEAD');
   const canManageCourses = user?.role === 'ADMIN' || user?.role === 'COORDINATOR' || user?.role === 'DEPT_HEAD';
 
-  // For TEACHER role: Only show courses assigned to this specific teacher in their assigned class
-  // For ADMIN, DEPT_HEAD, COORDINATOR: Full access to all courses across all 8 classes
-  const roleFilteredCourses =
-    user?.role === 'TEACHER'
-      ? courses.filter((c) => c.teacherId === user.id || c.teacherName === user.name)
-      : courses;
+  // For TEACHER role: Filter courses based on teacher assignments or all-class authority
+  const roleFilteredCourses = filterAccessibleCourses(courses, user);
+  const visibleClasses = filterAccessibleClasses(classes, user, courses);
 
   const classFilteredCourses =
     selectedClassFilter === 'ALL'
@@ -187,6 +185,46 @@ export const CoursesView: React.FC = () => {
         )}
       </div>
 
+      {/* Teacher Role-Based Access Banner */}
+      {user?.role === 'TEACHER' && (
+        <div className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs ${
+          hasFullClassAccess(user)
+            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+            : 'bg-amber-950/40 border-amber-500/30 text-[#F5A623]'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            {hasFullClassAccess(user) ? (
+              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            ) : (
+              <ShieldAlert className="w-5 h-5 text-[#F5A623] shrink-0" />
+            )}
+            <div>
+              <span className="font-bold">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'የሁሉም ኮርሶች እና ክፍሎች ሙሉ ፈቃድ'
+                    : 'Full Course & Class Access Granted'
+                  : language === 'am'
+                  ? `የተመደቡባቸው ኮርሶች ብቻ (${roleFilteredCourses.length} ኮርሶች)`
+                  : `Assigned Courses Only (${roleFilteredCourses.length} courses)`}
+              </span>
+              <p className="text-[11px] opacity-80 mt-0.5">
+                {hasFullClassAccess(user)
+                  ? language === 'am'
+                    ? 'አስተዳዳሪው ሁሉንም ኮርሶች እንዲያስተዳድሩ ሙሉ ፈቃድ ሰጥቶዎታል'
+                    : 'Administrator has granted you authority to view and manage all courses.'
+                  : language === 'am'
+                  ? 'የተመደቡባቸውን ኮርሶች ብቻ ማየት ይችላሉ። ተጨማሪ ኮርስ ለማስተማር አስተዳዳሪውን ያነጋግሩ።'
+                  : 'You can only access courses assigned to you. Contact admin for additional course assignments.'}
+              </p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 bg-black/40 rounded-lg text-[10px] font-mono font-bold shrink-0">
+            {roleFilteredCourses.length} / {courses.length} Courses
+          </span>
+        </div>
+      )}
+
       {/* Filter and Search Bar */}
       <div className="space-y-3 bg-[#27140B] p-4 border border-[#522B17] rounded-2xl shadow-lg">
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
@@ -217,9 +255,9 @@ export const CoursesView: React.FC = () => {
                 : 'bg-[#180B05] text-[#CBB39C] border-[#522B17] hover:text-white'
             }`}
           >
-            All Classes (8)
+            {visibleClasses.length === classes.length ? `All Classes (${classes.length})` : `All Assigned (${visibleClasses.length})`}
           </button>
-          {classes.map((cls) => (
+          {visibleClasses.map((cls) => (
             <button
               key={cls.id}
               onClick={() => setSelectedClassFilter(cls.id)}

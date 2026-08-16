@@ -4,8 +4,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
 import { AcademicClass, Course, DayOfWeek, ScheduleItem, User } from '../types';
-import { Calendar, Plus, AlertTriangle, Trash2, Clock, MapPin, Edit3, ShieldAlert, CheckSquare, Filter } from 'lucide-react';
+import { Calendar, Plus, AlertTriangle, Trash2, Clock, MapPin, Edit3, ShieldAlert, ShieldCheck, CheckSquare, Filter } from 'lucide-react';
 import { formatTimeStringToEthiopian } from '../utils/ethiopianCalendar';
+import { filterAccessibleClasses, getAccessibleClassIds, hasFullClassAccess } from '../utils/accessControl';
 
 export const SchedulesView: React.FC = () => {
   const { user } = useAuth();
@@ -187,10 +188,21 @@ export const SchedulesView: React.FC = () => {
   const todayDayName = dayOfWeekNames[currentNow.getDay()];
   const currentHourMin = `${String(currentNow.getHours()).padStart(2, '0')}:${String(currentNow.getMinutes()).padStart(2, '0')}`;
 
+  const visibleClasses = filterAccessibleClasses(classes, user, courses);
+  const accessibleClassIds = getAccessibleClassIds(user, courses, classes);
+  const accessibleCourseIds = new Set(user?.assignedCourseIds || []);
+
   // Role filtering: Teachers only see their assigned courses/classes; Admins, Dept Heads, and Coordinators have access to all 8 classes
   const roleFilteredSchedules =
-    user?.role === 'TEACHER'
-      ? schedules.filter((s) => s.teacherId === user.id || s.teacherName === user.name)
+    user?.role === 'TEACHER' && !hasFullClassAccess(user)
+      ? schedules.filter((s) => {
+          if (s.courseId && accessibleCourseIds.has(s.courseId)) return true;
+          if (s.classId && accessibleClassIds.has(s.classId)) return true;
+          if (accessibleCourseIds.size === 0 && accessibleClassIds.size === 0) {
+            return s.teacherId === user.id;
+          }
+          return false;
+        })
       : schedules;
 
   const visibleSchedules =
@@ -328,11 +340,18 @@ export const SchedulesView: React.FC = () => {
         </div>
       )}
 
-      {/* Class Level Selector Bar (For Admins, Dept Heads, Coordinators) */}
+      {/* Class Level Selector Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-[#27140B] p-3 sm:p-4 border border-[#522B17] rounded-2xl shadow-lg">
         <div className="flex items-center gap-2 text-xs text-[#CBB39C]">
           <Filter className="w-4 h-4 text-[#F5A623]" />
-          <span className="font-semibold">{language === 'am' ? 'የክፍል ማጣሪያ (8ቱም ክፍሎች)' : 'Class Level Filter (All 8 Classes):'}</span>
+          <span className="font-semibold">
+            {language === 'am' ? 'የክፍል ማጣሪያ:' : 'Class Filter:'}
+          </span>
+          {!hasFullClassAccess(user) && user?.role === 'TEACHER' && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E5921A]/20 text-[#F5A623] border border-[#E5921A]/30">
+              {language === 'am' ? 'የተመደቡ ብቻ' : 'Assigned Only'}
+            </span>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
@@ -344,9 +363,9 @@ export const SchedulesView: React.FC = () => {
                 : 'bg-[#180B05] text-[#CBB39C] border-[#522B17] hover:text-white'
             }`}
           >
-            {language === 'am' ? 'ሁሉም ክፍሎች (8)' : 'All Classes (8)'}
+            {language === 'am' ? `ሁሉም ክፍሎች (${visibleClasses.length})` : `All Classes (${visibleClasses.length})`}
           </button>
-          {classes.map((cls) => (
+          {visibleClasses.map((cls) => (
             <button
               key={cls.id}
               onClick={() => setSelectedClassFilter(cls.id)}
