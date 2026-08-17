@@ -18,6 +18,7 @@ import {
   Settings,
   ChevronRight,
   User as UserIcon,
+  LogOut,
   X,
 } from 'lucide-react';
 import { ProfileModal } from './ProfileModal';
@@ -35,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpenMobile = false,
   onCloseMobile,
 }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useLanguage();
   const [showProfileModal, setShowProfileModal] = useState(false);
 
@@ -65,6 +66,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (onCloseMobile) onCloseMobile();
   };
 
+  const handleLogout = () => {
+    if (onCloseMobile) onCloseMobile();
+    logout();
+  };
+
   const sidebarContent = (
     <div className="flex flex-col h-full text-[#F7E5C8] overflow-hidden">
       <div className="p-4 space-y-1 overflow-y-auto flex-1 min-h-0">
@@ -73,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {onCloseMobile && (
             <button
               onClick={onCloseMobile}
-              className="lg:hidden text-[#CBB39C] hover:text-white p-1 rounded"
+              className="lg:hidden text-[#CBB39C] hover:text-white p-1 rounded transition hover:bg-[#27140B]"
               aria-label="Close navigation menu"
             >
               <X className="w-4 h-4" />
@@ -103,10 +109,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           );
         })}
+
+        {/* Navigation List Logout Item */}
+        <div className="pt-2 mt-2 border-t border-[#3A1E10]/60">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs text-rose-300 hover:text-rose-200 hover:bg-rose-500/10 transition"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span className="font-semibold">{t('logout')}</span>
+            </div>
+          </button>
+        </div>
       </div>
 
-      {/* Profile Quick Button permanently pinned at bottom of Sidebar */}
-      <div className="p-4 border-t border-[#4A2715] space-y-2 bg-[#180B05] shrink-0">
+      {/* Profile Section permanently pinned at bottom of Sidebar */}
+      <div className="p-4 border-t border-[#4A2715] space-y-2.5 bg-[#180B05] shrink-0">
         <button
           onClick={() => {
             setShowProfileModal(true);
@@ -121,13 +140,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <UserIcon className="w-3.5 h-3.5" />
             )}
           </div>
-          <div className="truncate">
+          <div className="truncate flex-1 min-w-0">
             <div className="font-bold text-white truncate text-[11px]">{user?.name}</div>
             <div className="text-[10px] text-[#F5A623]">Edit Profile</div>
           </div>
         </button>
 
-        <div className="text-[10px] text-[#A68F7B] flex flex-col gap-0.5 px-1 pt-1">
+        <div className="text-[10px] text-[#A68F7B] flex flex-col gap-0.5 px-1 pt-0.5">
           <div className="flex items-center gap-1.5 font-semibold text-[#CBB39C]">
             <span className="w-2 h-2 rounded-full bg-[#F5A623] animate-pulse" />
             <span>Academic Year {getCurrentAcademicYear()}</span>

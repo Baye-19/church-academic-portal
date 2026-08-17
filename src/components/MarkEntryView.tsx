@@ -11,6 +11,8 @@ import {
   Send,
   AlertTriangle,
   Lock,
+  Unlock,
+  RotateCcw,
   CheckCircle2,
   TrendingUp,
   Sliders,
@@ -27,6 +29,12 @@ export const MarkEntryView: React.FC = () => {
   const toast = useToast();
 
   const isAdminOrDeptHead = user?.role === 'ADMIN' || user?.role === 'DEPT_HEAD';
+  const isAdminOrCoordinator =
+    user?.role === 'ADMIN' ||
+    user?.role === 'DEPT_HEAD' ||
+    user?.role === 'COORDINATOR' ||
+    hasFullClassAccess(user);
+  const isTeacher = user?.role === 'TEACHER' && !hasFullClassAccess(user);
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
@@ -36,6 +44,9 @@ export const MarkEntryView: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'danger'; text: string } | null>(null);
+
+  // Mark inputs are always editable
+  const isLockedForTeacher = false;
 
   // Column Configuration Modal State for Admin / Dept Head
   const [showColumnModal, setShowColumnModal] = useState(false);
@@ -279,10 +290,7 @@ export const MarkEntryView: React.FC = () => {
     }
   };
 
-  // Marks are ONLY locked when explicitly APPROVED by Admin / Coordinator
-  const isLocked = courseStatus === 'APPROVED';
-
-  const handleSave = async (isSubmit: boolean) => {
+  const handleSave = async (options: { isSubmit?: boolean; statusOverride?: string } = {}) => {
     setSaving(true);
     setMessage(null);
 
@@ -301,30 +309,84 @@ export const MarkEntryView: React.FC = () => {
       };
     });
 
+    const isSubmit = options.isSubmit ?? false;
+    let statusOverride = options.statusOverride;
+    if (!statusOverride && courseStatus === 'APPROVED' && isAdminOrCoordinator) {
+      statusOverride = 'APPROVED';
+    }
+
     const res = await api.saveMarks(
       selectedCourseId,
       entriesArray,
       isSubmit,
       user?.id,
-      user?.name
+      user?.name,
+      statusOverride
     );
 
     setSaving(false);
     if (res.success) {
-      const successText = isSubmit
-        ? (language === 'am'
-            ? 'ውጤቱ ለአስተዳዳሪው እና ለአስተባባሪው ገምጋሚ በተሳካ ሁኔታ ተልኳል!'
-            : 'Student results submitted successfully to Admin & Coordinators!')
-        : (language === 'am' ? 'የተማሪዎች ውጤት ረቂቅ በተሳካ ሁኔታ ተቀምጧል!' : 'Student marks draft saved successfully!');
+      const newStatus = res.status || statusOverride || (isSubmit ? 'SUBMITTED' : courseStatus);
+      setCourseStatus(newStatus);
+      const successText =
+        newStatus === 'APPROVED'
+          ? (language === 'am'
+              ? 'የፀደቁ የተማሪዎች ውጤቶች በአስተዳዳሪው በተሳካ ሁኔታ ተስተካክለው ተቀምጠዋል!'
+              : 'Approved student marks successfully updated and saved by Administrator!')
+          : isSubmit
+          ? (language === 'am'
+              ? 'ውጤቱ ለአስተዳዳሪው እና ለአስተባባሪው ገምጋሚ በተሳካ ሁኔታ ተልኳል!'
+              : 'Student results submitted successfully to Admin & Coordinators!')
+          : (language === 'am' ? 'የተማሪዎች ውጤት ረቂቅ በተሳካ ሁኔታ ተቀምጧል!' : 'Student marks draft saved successfully!');
 
       setMessage({
         type: 'success',
         text: successText,
       });
       toast.success(successText);
-      if (isSubmit) setCourseStatus('SUBMITTED');
     } else {
       const errText = language === 'am' ? 'ውጤት ማስቀመጥ አልተቻለም።' : 'Failed to save student marks.';
+      setMessage({ type: 'danger', text: errText });
+      toast.error(errText);
+    }
+  };
+
+  const handleUnlockCourse = async () => {
+    if (!selectedCourseId) return;
+    setSaving(true);
+    const res = await api.unlockCourseMarks(selectedCourseId, user?.id, user?.name);
+    setSaving(false);
+    if (res.success) {
+      setCourseStatus('DRAFT');
+      setRejectionReason('');
+      const successText =
+        language === 'am'
+          ? 'ውጤቱ ወደ ረቂቅ ሁኔታ ተመልሶ ለምዝገባ እና ለማስተካከል ክፍት ሆኗል!'
+          : 'Marks unlocked and set to editable Draft state!';
+      setMessage({ type: 'success', text: successText });
+      toast.success(successText);
+    } else {
+      const errText = language === 'am' ? 'ውጤት መክፈት አልተቻለም።' : 'Failed to unlock marks.';
+      setMessage({ type: 'danger', text: errText });
+      toast.error(errText);
+    }
+  };
+
+  const handleUnlockAllCourses = async () => {
+    setSaving(true);
+    const res = await api.unlockAllMarks();
+    setSaving(false);
+    if (res.success) {
+      setCourseStatus('DRAFT');
+      setRejectionReason('');
+      const successText =
+        language === 'am'
+          ? 'ሁሉም ኮርሶች ወደ ረቂቅ ሁኔታ ተመልሰው ለውጤት ምዝገባ ክፍት ሆነዋል!'
+          : 'All courses unlocked and set to editable Draft state!';
+      setMessage({ type: 'success', text: successText });
+      toast.success(successText);
+    } else {
+      const errText = language === 'am' ? 'ኮርሶችን መክፈት አልተቻለም።' : 'Failed to unlock courses.';
       setMessage({ type: 'danger', text: errText });
       toast.error(errText);
     }
@@ -342,8 +404,20 @@ export const MarkEntryView: React.FC = () => {
           <p className="text-xs text-[#CBB39C] mt-1">{t('markEntryDesc')}</p>
         </div>
 
-        {/* Course Selection Dropdown & Column Editor for Admin / Dept Head */}
+        {/* Course Selection Dropdown & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {courseStatus !== 'DRAFT' && (
+            <button
+              onClick={handleUnlockCourse}
+              disabled={saving}
+              className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
+              title="Unlock this course and revert to editable draft state"
+            >
+              <Unlock className="w-4 h-4 text-amber-400" />
+              <span>{language === 'am' ? 'ለውጤት ምዝገባ ክፈት (Unlock)' : 'Unlock Marks (Draft)'}</span>
+            </button>
+          )}
+
           {isAdminOrDeptHead && (
             <button
               onClick={handleOpenColumnModal}
@@ -407,25 +481,65 @@ export const MarkEntryView: React.FC = () => {
         <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-start gap-3 text-rose-300 text-xs">
           <AlertTriangle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
           <div>
-            <div className="font-bold text-rose-200">Revision Requested by Academic Coordinator / Admin</div>
-            <p className="mt-0.5">{rejectionReason || 'Please review and adjust student marks before resubmitting.'}</p>
+            <div className="font-bold text-rose-200">
+              {language === 'am' ? 'የውጤት ማስተካከያ በአስተዳዳሪው ተጠይቋል' : 'Revision Requested by Academic Coordinator / Admin'}
+            </div>
+            <p className="mt-0.5">
+              {rejectionReason || (language === 'am' ? 'እባክዎ ውጤቱን አስተካክለው እንደገና ይላኩ።' : 'Please review and adjust student marks before resubmitting.')}
+            </p>
           </div>
         </div>
       )}
 
       {courseStatus === 'APPROVED' && (
-        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-[#F5A623] text-xs font-semibold">
-          <Lock className="w-5 h-5 text-[#F5A623] shrink-0" />
-          <span>Marks have been APPROVED and officially LOCKED by the Academic Admin / Coordinator. Editing is now locked.</span>
+        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[#F5A623] text-xs">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <div className="font-bold text-amber-200 flex items-center gap-2">
+                <span>{language === 'am' ? 'የፀደቀ ውጤት (ለውጤት ምዝገባ መክፈት ይችላሉ)' : 'Marks Approved & Locked'}</span>
+              </div>
+              <p className="text-[11px] text-[#CBB39C] mt-0.5 font-normal">
+                {language === 'am'
+                  ? 'ይህ ኮርስ ፀድቋል። ውጤቶችን እንደገና ለማስገባት ወይም ለማስተካከል ከታች ያለውን "ክፈት (Unlock)" ቁልፍ ይጫኑ።'
+                  : 'These marks have been approved. To re-enter or edit student marks in draft state, click Unlock below.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleUnlockCourse}
+            disabled={saving}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 shrink-0 self-start sm:self-center"
+          >
+            <Unlock className="w-4 h-4" />
+            <span>{language === 'am' ? 'ለውጤት ምዝገባ ክፈት (Unlock)' : 'Unlock for Mark Entry'}</span>
+          </button>
         </div>
       )}
 
       {(courseStatus === 'SUBMITTED' || courseStatus === 'UNDER_REVIEW') && (
-        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl flex items-center gap-3 text-blue-300 text-xs font-semibold">
-          <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
-          <span>
-            Student marks SUBMITTED to Admin for review. Marks remain editable until the Admin officially approves and locks the course.
-          </span>
+        <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-blue-300 text-xs">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
+            <div>
+              <div className="font-bold text-blue-200">
+                {language === 'am' ? 'ውጤት ለግምገማ ቀርቧል' : 'Student Marks Submitted for Review'}
+              </div>
+              <p className="text-[11px] text-blue-300/80 mt-0.5 font-normal">
+                {language === 'am'
+                  ? 'ውጤቱ ለአስተዳዳሪው ተልኳል። ውጤቱን ወደ ረቂቅ ሁኔታ በመመለስ ማስተካከል ይችላሉ።'
+                  : 'Marks have been submitted for review. You can edit scores or unlock to draft anytime.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleUnlockCourse}
+            disabled={saving}
+            className="px-3.5 py-1.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-400/40 font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5 shrink-0 self-start sm:self-center"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{language === 'am' ? 'ወደ ረቂቅ መልስ (Revert to Draft)' : 'Revert to Draft'}</span>
+          </button>
         </div>
       )}
 
@@ -536,7 +650,7 @@ export const MarkEntryView: React.FC = () => {
                         <td key={col.id} className="p-2 text-center">
                           <input
                             type="number"
-                            disabled={isLocked}
+                            disabled={isLockedForTeacher}
                             min="0"
                             max={col.maxMark}
                             value={val}
@@ -544,6 +658,8 @@ export const MarkEntryView: React.FC = () => {
                             className={`w-20 px-2 py-1.5 bg-[#180B05] text-center font-bold rounded-lg text-xs border transition ${
                               isInvalid
                                 ? 'border-rose-500 bg-rose-500/20 text-rose-300'
+                                : isLockedForTeacher
+                                ? 'border-[#3A1E10] text-[#A68F7B] cursor-not-allowed opacity-80'
                                 : 'border-[#5C321B] focus:border-[#F5A623] text-white'
                             }`}
                           />
@@ -585,48 +701,74 @@ export const MarkEntryView: React.FC = () => {
         </div>
 
         {/* Action Buttons Footer */}
-        {!isLocked && (
+        {!isLockedForTeacher && (
           <div className="p-4 bg-[#180B05] border-t border-[#4A2715] flex flex-col sm:flex-row justify-between items-center gap-3">
             <span className="text-xs text-[#CBB39C]">
-              Totals, Grades, and Class Ranks calculate automatically as you edit marks.
+              {courseStatus === 'APPROVED' && isAdminOrCoordinator
+                ? (language === 'am'
+                    ? 'ማሳሰቢያ፡ የተስተካከሉ ውጤቶች ሲቀመጡ የፀደቁት ይፋዊ መዝገቦች ወዲያውኑ ይዘምናሉ።'
+                    : 'Notice: Saving edits will update the official approved student records and recalculate rankings.')
+                : 'Totals, Grades, and Class Ranks calculate automatically as you edit marks.'}
             </span>
 
-            <div className="flex gap-3">
-              <button
-                disabled={saving}
-                onClick={() => handleSave(false)}
-                className="px-4 py-2 bg-[#351C0F] hover:bg-[#442413] text-[#F7E5C8] font-semibold text-xs rounded-xl shadow transition flex items-center gap-1.5"
-              >
-                <Save className="w-4 h-4 text-[#F5A623]" />
-                <span>
-                  {user?.role === 'TEACHER'
-                    ? t('saveDraft')
-                    : (t('amharic') === 'አማርኛ' ? 'ውጤት መዝግብ / አስቀምጥ' : 'Save Changes')}
-                </span>
-              </button>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {isAdminOrCoordinator ? (
+                <>
+                  {courseStatus === 'APPROVED' ? (
+                    <button
+                      disabled={saving}
+                      onClick={() => handleSave({ statusOverride: 'APPROVED' })}
+                      className="px-5 py-2 bg-[#E5921A] hover:bg-[#FBB03B] text-[#1E0C04] font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>
+                        {language === 'am' ? 'የተስተካከለውን የፀደቀ ውጤት መዝግብ' : 'Save Approved Mark Edits'}
+                      </span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        disabled={saving}
+                        onClick={() => handleSave({ isSubmit: false })}
+                        className="px-4 py-2 bg-[#351C0F] hover:bg-[#442413] text-[#F7E5C8] font-semibold text-xs rounded-xl shadow transition flex items-center gap-1.5"
+                      >
+                        <Save className="w-4 h-4 text-[#F5A623]" />
+                        <span>{language === 'am' ? 'ለውጦችን መዝግብ' : 'Save Changes'}</span>
+                      </button>
 
-              {user?.role === 'TEACHER' ? (
-                <button
-                  disabled={saving}
-                  onClick={() => handleSave(true)}
-                  className="px-5 py-2 bg-[#E5921A] hover:bg-[#FBB03B] text-[#1E0C04] font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>
-                    {t('amharic') === 'አማርኛ' ? 'ውጤቱን ለአስተዳዳሪው ላክ' : 'Submit Results to Admin / Coordinator'}
-                  </span>
-                </button>
+                      <button
+                        disabled={saving}
+                        onClick={() => handleSave({ statusOverride: 'APPROVED' })}
+                        className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{language === 'am' ? 'ውጤት አጽድቅ እና አስቀምጥ' : 'Save & Approve Marks'}</span>
+                      </button>
+                    </>
+                  )}
+                </>
               ) : (
-                <button
-                  disabled={saving}
-                  onClick={() => handleSave(true)}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>
-                    {t('amharic') === 'አማርኛ' ? 'ውጤት አጽድቅ እና አስቀምጥ' : 'Save & Approve Marks'}
-                  </span>
-                </button>
+                <>
+                  <button
+                    disabled={saving}
+                    onClick={() => handleSave({ isSubmit: false })}
+                    className="px-4 py-2 bg-[#351C0F] hover:bg-[#442413] text-[#F7E5C8] font-semibold text-xs rounded-xl shadow transition flex items-center gap-1.5"
+                  >
+                    <Save className="w-4 h-4 text-[#F5A623]" />
+                    <span>{t('saveDraft')}</span>
+                  </button>
+
+                  <button
+                    disabled={saving}
+                    onClick={() => handleSave({ isSubmit: true })}
+                    className="px-5 py-2 bg-[#E5921A] hover:bg-[#FBB03B] text-[#1E0C04] font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>
+                      {language === 'am' ? 'ውጤቱን ለአስተዳዳሪው ላክ' : 'Submit Results to Admin / Coordinator'}
+                    </span>
+                  </button>
+                </>
               )}
             </div>
           </div>

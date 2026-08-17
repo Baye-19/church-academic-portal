@@ -192,10 +192,32 @@ export const api = {
     return res.json();
   },
 
-  async saveMarks(courseId: string, entries: any[], isSubmit: boolean, teacherId?: string, teacherName?: string) {
+  async saveMarks(
+    courseId: string,
+    entries: any[],
+    isSubmit: boolean,
+    teacherId?: string,
+    teacherName?: string,
+    statusOverride?: string
+  ) {
     const res = await authFetch('/api/marks/save', {
       method: 'POST',
-      body: JSON.stringify({ courseId, entries, isSubmit, teacherId, teacherName }),
+      body: JSON.stringify({ courseId, entries, isSubmit, teacherId, teacherName, statusOverride }),
+    });
+    return res.json();
+  },
+
+  async unlockCourseMarks(courseId: string, userId?: string, userName?: string) {
+    const res = await authFetch(`/api/marks/${courseId}/unlock`, {
+      method: 'POST',
+      body: JSON.stringify({ userId, userName }),
+    });
+    return res.json();
+  },
+
+  async unlockAllMarks() {
+    const res = await authFetch('/api/marks/unlock-all', {
+      method: 'POST',
     });
     return res.json();
   },

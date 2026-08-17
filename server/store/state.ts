@@ -412,7 +412,7 @@ export let marks: any[] = [
     total: 92,
     grade: 'A+',
     gradePoint: 4.0,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-2',
@@ -428,7 +428,7 @@ export let marks: any[] = [
     total: 85,
     grade: 'A',
     gradePoint: 4.0,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-3',
@@ -444,7 +444,7 @@ export let marks: any[] = [
     total: 72,
     grade: 'C+',
     gradePoint: 2.5,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-4',
@@ -460,7 +460,7 @@ export let marks: any[] = [
     total: 80,
     grade: 'B+',
     gradePoint: 3.5,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-5',
@@ -476,7 +476,7 @@ export let marks: any[] = [
     total: 90,
     grade: 'A+',
     gradePoint: 4.0,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-6',
@@ -492,7 +492,7 @@ export let marks: any[] = [
     total: 95,
     grade: 'A+',
     gradePoint: 4.0,
-    status: 'APPROVED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-7',
@@ -508,7 +508,7 @@ export let marks: any[] = [
     total: 75,
     grade: 'B',
     gradePoint: 3.0,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-8',
@@ -524,7 +524,7 @@ export let marks: any[] = [
     total: 82,
     grade: 'A-',
     gradePoint: 3.75,
-    status: 'APPROVED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-9',
@@ -540,7 +540,7 @@ export let marks: any[] = [
     total: 87,
     grade: 'A',
     gradePoint: 4.0,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-10',
@@ -556,7 +556,7 @@ export let marks: any[] = [
     total: 92,
     grade: 'A+',
     gradePoint: 4.0,
-    status: 'APPROVED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-11',
@@ -572,7 +572,7 @@ export let marks: any[] = [
     total: 68,
     grade: 'C+',
     gradePoint: 2.5,
-    status: 'SUBMITTED',
+    status: 'DRAFT',
   },
   {
     id: 'mrk-12',
@@ -588,27 +588,11 @@ export let marks: any[] = [
     total: 84,
     grade: 'A',
     gradePoint: 4.0,
-    status: 'APPROVED',
+    status: 'DRAFT',
   },
 ];
 
-export let submissionReviews: any[] = [
-  {
-    id: 'sub-1',
-    courseId: 'crs-101',
-    courseCode: 'CS101',
-    courseTitle: 'Introduction to Computer Programming',
-    teacherId: 'usr-3',
-    teacherName: 'Instructor Abebe Kebede',
-    coordinatorId: 'usr-5',
-    coordinatorName: 'Coordinator Dawit Bekele',
-    studentCount: 4,
-    submittedAt: '2026-02-10T10:30:00Z',
-    status: 'SUBMITTED',
-    averageScore: 82.25,
-    passRate: 100,
-  },
-];
+export let submissionReviews: any[] = [];
 
 export let schedules: any[] = [
   {
@@ -1346,10 +1330,21 @@ export async function initFirestoreData() {
       }
 
       const dbMarks = await dbGetCollection('marks');
-      if (dbMarks.length > 0) marks = dbMarks;
+      if (dbMarks.length > 0) {
+        for (const m of dbMarks) {
+          m.status = 'DRAFT';
+          delete m.rejectionReason;
+        }
+        marks = dbMarks;
+      }
 
       const dbSubmissions = await dbGetCollection('submissionReviews');
-      if (dbSubmissions.length > 0) submissionReviews = dbSubmissions;
+      if (dbSubmissions.length > 0) {
+        for (const s of dbSubmissions) {
+          s.status = 'DRAFT';
+        }
+        submissionReviews = dbSubmissions;
+      }
 
       const dbSchedules = await dbGetCollection('schedules');
       if (dbSchedules.length > 0) schedules = dbSchedules;
