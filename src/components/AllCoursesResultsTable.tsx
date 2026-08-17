@@ -201,10 +201,10 @@ export const AllCoursesResultsTable: React.FC = () => {
   const handleExportCSV = () => {
     if (rankedStudentRows.length === 0) return;
 
-    const courseHeaders = relevantCourses.map((c) => `"${c.code} (${c.title})" Grade`);
+    const courseHeaders = relevantCourses.map((c) => `"${c.title}" Grade`);
     const headers = [
       'Class Rank',
-      'Student ID',
+      'No.',
       'Student Name',
       'Amharic Name',
       'Class ID',
@@ -214,7 +214,7 @@ export const AllCoursesResultsTable: React.FC = () => {
       'Overall Status',
     ];
 
-    const rows = rankedStudentRows.map((s) => {
+    const rows = rankedStudentRows.map((s, idx) => {
       const rank = classRankMap.get(s.studentId) || '-';
       const courseGrades = relevantCourses.map((c) => {
         const mark = s.courseMarks.get(c.id);
@@ -223,7 +223,7 @@ export const AllCoursesResultsTable: React.FC = () => {
 
       return [
         rank,
-        s.studentCode,
+        idx + 1,
         `"${s.studentName}"`,
         `"${s.studentAmharicName}"`,
         s.classId,
@@ -389,17 +389,19 @@ export const AllCoursesResultsTable: React.FC = () => {
               <thead className="bg-[#180B05] text-[#CBB39C] font-semibold uppercase tracking-wider border-b border-[#4A2715]">
                 <tr>
                   <th className="p-3.5 text-center font-bold text-[#F5A623]">Class Rank</th>
-                  <th className="p-3.5">Student ID</th>
+                  <th className="p-3.5 text-center w-12">No.</th>
                   <th className="p-3.5">Student Name</th>
                   <th className="p-3.5 text-center">Class</th>
 
                   {/* Dynamic Course Columns across top */}
                   {relevantCourses.map((c) => (
                     <th key={c.id} className="p-3.5 text-center bg-[#210E06]">
-                      <div className="font-extrabold text-[#F5A623] text-xs">{c.code}</div>
-                      <div className="text-[10px] text-[#CBB39C] normal-case font-normal truncate max-w-[120px] mx-auto">
-                        {c.title}
-                      </div>
+                      <div className="font-extrabold text-[#F5A623] text-xs truncate max-w-[130px] mx-auto">{c.title}</div>
+                      {c.amharicTitle && (
+                        <div className="text-[10px] text-[#CBB39C] normal-case font-normal truncate max-w-[130px] mx-auto">
+                          {c.amharicTitle}
+                        </div>
+                      )}
                     </th>
                   ))}
 
@@ -415,7 +417,7 @@ export const AllCoursesResultsTable: React.FC = () => {
 
               {/* Student Rows */}
               <tbody className="divide-y divide-[#3A1E10]">
-                {rankedStudentRows.map((student) => {
+                {rankedStudentRows.map((student, idx) => {
                   const rank = classRankMap.get(student.studentId) || 0;
 
                   return (
@@ -440,9 +442,9 @@ export const AllCoursesResultsTable: React.FC = () => {
                         </span>
                       </td>
 
-                      {/* Student ID Code */}
-                      <td className="p-3.5 font-mono font-bold text-[#F5A623]">
-                        {student.studentCode}
+                      {/* Student Number starting from 1 */}
+                      <td className="p-3.5 font-mono font-bold text-[#F5A623] text-center">
+                        {idx + 1}
                       </td>
 
                       {/* Student Full Name */}

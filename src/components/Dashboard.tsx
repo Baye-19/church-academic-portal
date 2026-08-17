@@ -365,8 +365,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
               {(user?.role === 'TEACHER' ? myCourses : courses.slice(0, 5)).map((c) => (
                 <div key={c.id} className="py-3 flex items-center justify-between text-xs">
                   <div>
-                    <div className="font-bold text-white flex items-center gap-2">
-                      <span className="text-[#F5A623] font-mono">{c.code}</span>
+                    <div className="font-bold text-white">
                       <span>{c.title}</span>
                     </div>
                     <div className="text-[11px] text-[#CBB39C] mt-0.5">
@@ -416,7 +415,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                   <div className="text-[10px] text-[#F7E5C8]/80 font-mono">
                     {formatTimeStringToEthiopian(s.startTime, language)} - {formatTimeStringToEthiopian(s.endTime, language)}
                   </div>
-                  <div className="font-semibold text-white">{s.courseCode}: {s.courseTitle}</div>
+                  <div className="font-semibold text-white">{s.courseTitle}</div>
                   <div className="text-[11px] text-[#CBB39C]">
                     📍 {s.room} • Class: <strong className="text-white">{s.className}</strong> (Sec {s.section})
                   </div>

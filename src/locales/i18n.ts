@@ -110,7 +110,7 @@ export const translations = {
     addNewTeacher: 'Register New Teacher',
 
     // Students
-    studentId: 'Student ID',
+    studentId: 'No.',
     gender: 'Gender',
     male: 'Male',
     female: 'Female',
@@ -321,7 +321,7 @@ export const translations = {
     addNewTeacher: 'አዲስ መምህር መዝግብ',
 
     // Students
-    studentId: 'የተማሪ መታወቂያ',
+    studentId: 'ተ.ቁ',
     gender: 'ጾታ',
     male: 'ወንድ',
     female: 'ሴት',

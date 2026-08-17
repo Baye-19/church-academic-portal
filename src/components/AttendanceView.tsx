@@ -633,7 +633,6 @@ export const AttendanceView: React.FC = () => {
                 <thead className="bg-[#180B05] text-[#CBB39C] font-semibold uppercase tracking-wider border-b border-[#4A2715]">
                   <tr>
                     <th className="p-3 text-center min-w-[50px]">#</th>
-                    <th className="p-3 min-w-[120px]">Student ID</th>
                     <th className="p-3 min-w-[180px]">Student Name</th>
                     <th className="p-3 min-w-[320px] text-center">Attendance Status</th>
                     <th className="p-3 min-w-[180px]">Remarks / Note</th>
@@ -642,7 +641,7 @@ export const AttendanceView: React.FC = () => {
                 <tbody className="divide-y divide-[#3A1E10]">
                   {filteredStudents.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-xs text-[#CBB39C]">
+                      <td colSpan={4} className="p-8 text-center text-xs text-[#CBB39C]">
                         No registered students found for {selectedClass?.name || 'this class'}.
                       </td>
                     </tr>
@@ -653,8 +652,7 @@ export const AttendanceView: React.FC = () => {
 
                       return (
                         <tr key={std.id} className="hover:bg-[#351C0F]/60 transition">
-                          <td className="p-3 text-center text-[#CBB39C] font-mono">{idx + 1}</td>
-                          <td className="p-3 font-mono font-bold text-[#F5A623]">{std.studentId}</td>
+                          <td className="p-3 text-center text-[#F5A623] font-mono font-bold">{idx + 1}</td>
                           <td className="p-3 font-semibold text-white">
                             <div>{std.firstName} {std.lastName}</div>
                             <div className="text-[10px] text-[#CBB39C]">{std.amharicName}</div>

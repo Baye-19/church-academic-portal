@@ -56,7 +56,7 @@ export const ResultsView: React.FC = () => {
     if (!analysis || !analysis.rankings) return;
     const headers = [
       'Rank',
-      'Student ID',
+      'No.',
       'Student Name',
       'Assignment',
       'Quiz',
@@ -66,9 +66,9 @@ export const ResultsView: React.FC = () => {
       'Grade',
       'Grade Point',
     ];
-    const rows = analysis.rankings.map((r: any) => [
+    const rows = analysis.rankings.map((r: any, idx: number) => [
       r.rank,
-      r.studentCode,
+      idx + 1,
       `"${r.studentName}"`,
       r.assignment,
       r.quiz,
@@ -155,7 +155,7 @@ export const ResultsView: React.FC = () => {
               >
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.code} — {c.title}
+                    {c.title} {c.amharicTitle ? `(${c.amharicTitle})` : ''}
                   </option>
                 ))}
               </select>
@@ -251,7 +251,7 @@ export const ResultsView: React.FC = () => {
                 <thead className="bg-[#180B05] text-[#CBB39C] font-semibold uppercase tracking-wider border-b border-[#4A2715]">
                   <tr>
                     <th className="p-4">{t('rank')}</th>
-                    <th className="p-4">{t('studentId')}</th>
+                    <th className="p-4 w-12 text-center">{t('studentId')}</th>
                     <th className="p-4">{t('studentName')}</th>
                     <th className="p-4 text-center">Assignment</th>
                     <th className="p-4 text-center">Quiz</th>
@@ -262,7 +262,7 @@ export const ResultsView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#3A1E10]">
-                  {analysis.rankings.map((r: any) => (
+                  {analysis.rankings.map((r: any, idx: number) => (
                     <tr key={r.id} className="hover:bg-[#351C0F]/60 transition">
                       <td className="p-4 font-bold text-sm">
                         {r.rank === 1 ? (
@@ -275,7 +275,7 @@ export const ResultsView: React.FC = () => {
                           <span className="text-[#CBB39C] font-semibold pl-2">#{r.rank}</span>
                         )}
                       </td>
-                      <td className="p-4 font-mono font-bold text-[#F5A623]">{r.studentCode}</td>
+                      <td className="p-4 font-mono font-bold text-[#F5A623] text-center">{idx + 1}</td>
                       <td className="p-4 font-semibold text-white">
                         {r.studentName}
                         {r.studentAmharicName && <div className="text-[10px] text-[#CBB39C]">{r.studentAmharicName}</div>}

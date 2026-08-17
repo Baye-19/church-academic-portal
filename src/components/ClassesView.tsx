@@ -517,9 +517,6 @@ export const ClassesView: React.FC = () => {
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className={`px-2 py-0.5 border text-[10px] font-bold rounded ${colorClasses}`}>
-                                      {c.code}
-                                    </span>
-                                    <span className="text-xs text-slate-400 font-medium">
                                       {c.creditHours} Credits
                                     </span>
                                   </div>
@@ -572,7 +569,7 @@ export const ClassesView: React.FC = () => {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                        {classStudents.map((std) => (
+                        {classStudents.map((std, sIdx) => (
                           <div
                             key={std.id}
                             className="p-3 bg-slate-850 border border-slate-800 rounded-xl text-xs flex justify-between items-center"
@@ -587,7 +584,7 @@ export const ClassesView: React.FC = () => {
                                 )}
                               </div>
                               <div className="text-[10px] text-slate-400 mt-0.5">
-                                ID: {std.studentId} • Sec: {std.section} • {std.gender}
+                                #{sIdx + 1} • Sec: {std.section} • {std.gender}
                               </div>
                             </div>
                             <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[10px] font-bold uppercase">

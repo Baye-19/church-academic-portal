@@ -339,31 +339,25 @@ export async function exportAttendanceToWord(params: {
     tableHeader: true,
     children: [
       new TableCell({
-        width: { size: 6, type: WidthType.PERCENTAGE },
+        width: { size: 8, type: WidthType.PERCENTAGE },
         shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
         borders: cellBorders,
         children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '#', bold: true, color: 'FFFFFF', size: 18 })] })],
       }),
       new TableCell({
-        width: { size: 16, type: WidthType.PERCENTAGE },
-        shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
-        borders: cellBorders,
-        children: [new Paragraph({ children: [new TextRun({ text: 'Student ID', bold: true, color: 'FFFFFF', size: 18 })] })],
-      }),
-      new TableCell({
-        width: { size: 38, type: WidthType.PERCENTAGE },
+        width: { size: 46, type: WidthType.PERCENTAGE },
         shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
         borders: cellBorders,
         children: [new Paragraph({ children: [new TextRun({ text: 'Student Full Name (የተማሪው ስም)', bold: true, color: 'FFFFFF', size: 18 })] })],
       }),
       new TableCell({
-        width: { size: 20, type: WidthType.PERCENTAGE },
+        width: { size: 23, type: WidthType.PERCENTAGE },
         shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
         borders: cellBorders,
         children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Status / መገኘት', bold: true, color: 'FFFFFF', size: 18 })] })],
       }),
       new TableCell({
-        width: { size: 20, type: WidthType.PERCENTAGE },
+        width: { size: 23, type: WidthType.PERCENTAGE },
         shading: { fill: '5B2C16', type: ShadingType.CLEAR, color: 'auto' },
         borders: cellBorders,
         children: [new Paragraph({ children: [new TextRun({ text: 'Remarks / ማስታወሻ', bold: true, color: 'FFFFFF', size: 18 })] })],
@@ -406,11 +400,6 @@ export async function exportAttendanceToWord(params: {
           shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
           borders: cellBorders,
           children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${index + 1}`, size: 18, color: '666666' })] })],
-        }),
-        new TableCell({
-          shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },
-          borders: cellBorders,
-          children: [new Paragraph({ children: [new TextRun({ text: entry.studentCode, bold: true, size: 18, color: '5B2C16' })] })],
         }),
         new TableCell({
           shading: { fill: rowBg, type: ShadingType.CLEAR, color: 'auto' },

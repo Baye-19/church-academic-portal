@@ -83,7 +83,6 @@ export const CoursesView: React.FC = () => {
   const filteredCourses = classFilteredCourses.filter(
     (c) =>
       c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase()) ||
       c.amharicTitle.includes(search)
   );
 
@@ -92,8 +91,14 @@ export const CoursesView: React.FC = () => {
     const teacher = teachers.find((t) => t.id === formData.teacherId);
     const coordinator = coordinators.find((c) => c.id === formData.coordinatorId);
 
+    const generatedCode =
+      formData.code.trim() ||
+      formData.title.trim().replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase() ||
+      `CRS-${Date.now().toString().slice(-4)}`;
+
     const payload = {
       ...formData,
+      code: generatedCode,
       teacherName: teacher ? teacher.name : '',
       coordinatorName: coordinator ? coordinator.name : '',
     };
@@ -102,8 +107,8 @@ export const CoursesView: React.FC = () => {
     if (res.success) {
       toast.success(
         language === 'am'
-          ? `የትምህርት አይነት "${payload.code} - ${payload.amharicTitle || payload.title}" በተሳካ ሁኔታ ተፈጥሯል!`
-          : `Course "${payload.code} - ${payload.title}" created successfully!`
+          ? `የትምህርት አይነት "${payload.amharicTitle || payload.title}" በተሳካ ሁኔታ ተፈጥሯል!`
+          : `Course "${payload.title}" created successfully!`
       );
       setShowAddModal(false);
       loadData();
@@ -115,7 +120,7 @@ export const CoursesView: React.FC = () => {
   const handleStartEdit = (course: Course) => {
     setEditingCourse(course);
     setEditFormData({
-      code: course.code,
+      code: course.code || '',
       title: course.title,
       amharicTitle: course.amharicTitle,
       creditHours: course.creditHours,
@@ -149,8 +154,8 @@ export const CoursesView: React.FC = () => {
     if (res.success) {
       toast.success(
         language === 'am'
-          ? `የትምህርት አይነት "${payload.code}" መረጃ ተሻሽሏል!`
-          : `Course "${payload.code}" updated successfully!`
+          ? `የትምህርት አይነት "${payload.amharicTitle || payload.title}" መረጃ ተሻሽሏል!`
+          : `Course "${payload.title}" updated successfully!`
       );
       setShowEditModal(false);
       setEditingCourse(null);
@@ -279,7 +284,6 @@ export const CoursesView: React.FC = () => {
           <table className="w-full text-left text-xs text-[#F7E5C8]">
             <thead className="bg-[#180B05] text-[#CBB39C] font-semibold uppercase tracking-wider border-b border-[#4A2715]">
               <tr>
-                <th className="p-4">{t('courseCode')}</th>
                 <th className="p-4">{t('courseTitle')}</th>
                 <th className="p-4">{t('classLevel')}</th>
                 <th className="p-4">{t('semester')}</th>
@@ -296,19 +300,16 @@ export const CoursesView: React.FC = () => {
 
                 return (
                   <tr key={c.id} className={`hover:bg-[#351C0F]/60 transition ${isMyCourse ? 'bg-[#351C0F]/40' : ''}`}>
-                    <td className="p-4 font-bold text-[#F5A623]">
-                      <div className="flex items-center gap-1.5">
-                        <span>{c.code}</span>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm">{c.title}</span>
                         {isMyCourse && (
                           <span className="px-1.5 py-0.5 bg-[#F5A623] text-[#1E0C04] text-[9px] font-extrabold rounded uppercase tracking-wider">
                             Your Course
                           </span>
                         )}
                       </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="font-semibold text-white">{c.title}</div>
-                      <div className="text-[#CBB39C] text-[11px]">{c.amharicTitle}</div>
+                      <div className="text-[#CBB39C] text-xs mt-0.5">{c.amharicTitle}</div>
                     </td>
                     <td className="p-4 font-medium text-[#F7E5C8]">{classObj ? classObj.name : c.classId}</td>
                     <td className="p-4">
@@ -353,17 +354,44 @@ export const CoursesView: React.FC = () => {
             </h3>
 
             <form onSubmit={handleCreateCourse} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[#CBB39C] mb-1">{t('courseTitle')} (English)</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. Christian Ethics & History"
+                  className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#CBB39C] mb-1">{t('courseAmharicTitle')} (አማርኛ)</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.amharicTitle}
+                  onChange={(e) => setFormData({ ...formData, amharicTitle: e.target.value })}
+                  placeholder="e.g. ክርስቲያናዊ ስነ-ምግባር እና ታሪክ"
+                  className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#CBB39C] mb-1">{t('courseCode')}</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="e.g. CS301"
+                  <label className="block text-[#CBB39C] mb-1">{t('classLevel')}</label>
+                  <select
+                    value={formData.classId}
+                    onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
                     className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
-                  />
+                  >
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name} ({cls.amharicName})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[#CBB39C] mb-1">{t('creditHours')}</label>
@@ -531,34 +559,10 @@ export const CoursesView: React.FC = () => {
           <div className="bg-[#27140B] border border-[#522B17] w-full max-w-xl rounded-2xl p-6 shadow-2xl text-white space-y-4">
             <h3 className="text-lg font-bold text-[#F5A623] flex items-center gap-2">
               <Pencil className="w-5 h-5" />
-              <span>{t('editCourse')} ({editingCourse.code})</span>
+              <span>{t('editCourse')} ({editingCourse.title})</span>
             </h3>
 
             <form onSubmit={handleUpdateCourse} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#CBB39C] mb-1">{t('courseCode')}</label>
-                  <input
-                    type="text"
-                    required
-                    value={editFormData.code}
-                    onChange={(e) => setEditFormData({ ...editFormData, code: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#CBB39C] mb-1">{t('creditHours')}</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="6"
-                    value={editFormData.creditHours}
-                    onChange={(e) => setEditFormData({ ...editFormData, creditHours: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-[#CBB39C] mb-1">{t('courseTitle')} (English)</label>
                 <input
@@ -599,6 +603,20 @@ export const CoursesView: React.FC = () => {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('creditHours')}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="6"
+                    value={editFormData.creditHours}
+                    onChange={(e) => setEditFormData({ ...editFormData, creditHours: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block text-[#CBB39C] mb-1">{t('semester')}</label>
                   <select
                     value={editFormData.semester}
@@ -608,6 +626,15 @@ export const CoursesView: React.FC = () => {
                     <option value="Semester I">Semester I</option>
                     <option value="Semester II">Semester II</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-[#CBB39C] mb-1">{t('academicYear')}</label>
+                  <input
+                    type="text"
+                    value={editFormData.academicYear}
+                    onChange={(e) => setEditFormData({ ...editFormData, academicYear: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#180B05] border border-[#5C321B] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#F5A623]/50"
+                  />
                 </div>
               </div>
 

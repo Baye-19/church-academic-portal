@@ -41,8 +41,8 @@ export const ReviewQueueView: React.FC = () => {
     if (res.success) {
       toast.success(
         language === 'am'
-          ? `የ ${sub.courseCode} (${sub.courseTitle}) ውጤት ፀድቋል!`
-          : `Marks for ${sub.courseCode} (${sub.courseTitle}) approved successfully!`
+          ? `የ ${sub.courseTitle} ውጤት ፀድቋል!`
+          : `Marks for ${sub.courseTitle} approved successfully!`
       );
       setSelectedSub(null);
       loadData();
@@ -59,8 +59,8 @@ export const ReviewQueueView: React.FC = () => {
     if (res.success) {
       toast.info(
         language === 'am'
-          ? `የ ${selectedSub.courseCode} ውጤት እንዲስተካከል ወደ መምህሩ ተመልሷል።`
-          : `Marks for ${selectedSub.courseCode} sent back for revision.`
+          ? `የ ${selectedSub.courseTitle} ውጤት እንዲስተካከል ወደ መምህሩ ተመልሷል።`
+          : `Marks for ${selectedSub.courseTitle} sent back for revision.`
       );
       setShowRejectModal(false);
       setRejectReason('');
@@ -105,8 +105,7 @@ export const ReviewQueueView: React.FC = () => {
             >
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <span className="font-bold text-sm sm:text-base text-[#F5A623]">{sub.courseCode}</span>
-                  <span className="font-semibold text-white text-xs sm:text-sm">{sub.courseTitle}</span>
+                  <span className="font-bold text-sm sm:text-base text-[#F5A623]">{sub.courseTitle}</span>
                   <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold uppercase ${
                     sub.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-300' :
                     sub.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
@@ -169,7 +168,7 @@ export const ReviewQueueView: React.FC = () => {
           <div className="bg-slate-850 border border-slate-700 w-full max-w-3xl rounded-2xl p-6 shadow-2xl text-white space-y-4 max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center pb-3 border-b border-slate-700">
               <h3 className="font-bold text-base text-emerald-400">
-                Mark List Preview — {selectedSub.courseCode} ({selectedSub.courseTitle})
+                Mark List Preview — {selectedSub.courseTitle}
               </h3>
               <button
                 onClick={() => setSelectedSub(null)}
@@ -183,7 +182,7 @@ export const ReviewQueueView: React.FC = () => {
               <table className="w-full text-left">
                 <thead className="bg-slate-900 text-slate-400 font-semibold uppercase">
                   <tr>
-                    <th className="p-3">Student ID</th>
+                    <th className="p-3 w-12 text-center">No.</th>
                     <th className="p-3">Name</th>
                     <th className="p-3 text-center">Assignment</th>
                     <th className="p-3 text-center">Quiz</th>
@@ -194,9 +193,9 @@ export const ReviewQueueView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {previewMarks.map((m) => (
+                  {previewMarks.map((m, idx) => (
                     <tr key={m.id} className="hover:bg-slate-800/50">
-                      <td className="p-3 font-mono font-bold text-emerald-400">{m.studentCode}</td>
+                      <td className="p-3 font-mono font-bold text-emerald-400 text-center">{idx + 1}</td>
                       <td className="p-3 font-semibold text-slate-200">{m.studentName}</td>
                       <td className="p-3 text-center">{m.assignment}</td>
                       <td className="p-3 text-center">{m.quiz}</td>

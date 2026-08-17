@@ -438,7 +438,7 @@ export const MarkEntryView: React.FC = () => {
             >
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.code} — {c.title}
+                  {c.title} {c.amharicTitle ? `(${c.amharicTitle})` : ''}
                 </option>
               ))}
             </select>
@@ -561,8 +561,10 @@ export const MarkEntryView: React.FC = () => {
         {/* Table Toolbar Bar */}
         <div className="p-4 bg-[#180B05] border-b border-[#4A2715] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[#F5A623] text-sm">{selectedCourse.code}:</span>
-            <span className="font-semibold text-white">{selectedCourse.title}</span>
+            <span className="font-bold text-[#F5A623] text-sm">{selectedCourse.title}</span>
+            {selectedCourse.amharicTitle && (
+              <span className="text-xs text-[#CBB39C]">({selectedCourse.amharicTitle})</span>
+            )}
             <span className="text-[#CBB39C]">({selectedCourse.classId} • {selectedCourse.semester})</span>
           </div>
 
@@ -588,7 +590,7 @@ export const MarkEntryView: React.FC = () => {
             <thead className="bg-[#180B05] text-[#CBB39C] font-semibold uppercase tracking-wider border-b border-[#4A2715]">
               <tr>
                 <th className="p-3 text-center min-w-[70px] text-[#F5A623]">Rank</th>
-                <th className="p-3 min-w-[110px]">{t('studentId')}</th>
+                <th className="p-3 min-w-[60px] text-center">{t('studentId')}</th>
                 <th className="p-3 min-w-[170px]">{t('studentName')}</th>
 
                 {/* Dynamic Assessment Columns Headers */}
@@ -612,7 +614,7 @@ export const MarkEntryView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#3A1E10]">
-              {courseStudents.map((std) => {
+              {courseStudents.map((std, index) => {
                 const entry = markEntries[std.id] || { assignment: 0, quiz: 0, midterm: 0, final: 0, customMarks: {} };
                 const { total, grade, point } = calculateTotalAndGrade(entry);
                 const rank = rankMap[std.id] || 1;
@@ -632,8 +634,8 @@ export const MarkEntryView: React.FC = () => {
                       )}
                     </td>
 
-                    {/* Student ID */}
-                    <td className="p-3 font-mono font-bold text-[#F5A623]">{std.studentId}</td>
+                    {/* Student Number (Starting from 1) */}
+                    <td className="p-3 font-mono font-bold text-[#F5A623] text-center">{index + 1}</td>
 
                     {/* Student Name */}
                     <td className="p-3 font-semibold text-white">
@@ -788,7 +790,7 @@ export const MarkEntryView: React.FC = () => {
 
             <h3 className="text-base font-bold text-white flex items-center gap-2 border-b border-[#4A2715] pb-3">
               <Sliders className="w-5 h-5 text-[#F5A623]" />
-              <span>Configure Mark Columns ({selectedCourse.code})</span>
+              <span>Configure Mark Columns ({selectedCourse.title})</span>
             </h3>
 
             <p className="text-xs text-[#CBB39C]">

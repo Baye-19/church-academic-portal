@@ -126,7 +126,7 @@ export const SchedulesView: React.FC = () => {
 
     const payload = {
       ...formData,
-      courseCode: courseObj ? courseObj.code : 'CS',
+      courseCode: courseObj ? courseObj.title : 'Course',
       courseTitle: courseObj ? courseObj.title : 'Course',
       className: classObj ? classObj.name : formData.classId,
       teacherName: teacherObj ? teacherObj.name : 'Instructor',
@@ -138,8 +138,8 @@ export const SchedulesView: React.FC = () => {
       if (res.success) {
         toast.success(
           language === 'am'
-            ? `የ ${payload.courseCode} የጊዜ ሰሌዳ ተሻሽሏል!`
-            : `Schedule for ${payload.courseCode} updated successfully!`
+            ? `የ ${payload.courseTitle} የጊዜ ሰሌዳ ተሻሽሏል!`
+            : `Schedule for ${payload.courseTitle} updated successfully!`
         );
       }
     } else {
@@ -147,8 +147,8 @@ export const SchedulesView: React.FC = () => {
       if (res.success) {
         toast.success(
           language === 'am'
-            ? `አዲስ የክፍለ-ጊዜ ሰሌዳ ለ ${payload.courseCode} ተመዝግቧል!`
-            : `Schedule slot for ${payload.courseCode} added successfully!`
+            ? `አዲስ የክፍለ-ጊዜ ሰሌዳ ለ ${payload.courseTitle} ተመዝግቧል!`
+            : `Schedule slot for ${payload.courseTitle} added successfully!`
         );
       }
     }
@@ -273,7 +273,7 @@ export const SchedulesView: React.FC = () => {
                   <span className="text-xs text-emerald-300 font-bold">{activeClassNow.className}</span>
                 </div>
                 <h4 className="font-bold text-sm text-white mt-1">
-                  {activeClassNow.courseCode}: {activeClassNow.courseTitle}
+                  {activeClassNow.courseTitle}
                 </h4>
                 <div className="text-xs text-emerald-200/90 mt-0.5 flex flex-wrap items-center gap-2">
                   <span>📍 {activeClassNow.room}</span>
@@ -295,7 +295,7 @@ export const SchedulesView: React.FC = () => {
                   <span className="text-xs text-[#FBB03B] font-bold">{nextClassToday.className} (Sec {nextClassToday.section})</span>
                 </div>
                 <h4 className="font-bold text-sm text-white mt-1">
-                  {nextClassToday.courseCode}: {nextClassToday.courseTitle}
+                  {nextClassToday.courseTitle}
                 </h4>
                 <div className="text-xs text-[#CBB39C] mt-0.5 flex flex-wrap items-center gap-2">
                   <span>📍 {nextClassToday.room}</span>
@@ -444,7 +444,7 @@ export const SchedulesView: React.FC = () => {
                       </div>
 
                       <h4 className="font-bold text-xs text-white">
-                        {s.courseCode}: {s.courseTitle}
+                        {s.courseTitle}
                       </h4>
 
                       <div className="text-[11px] text-[#CBB39C] flex flex-col gap-0.5">
@@ -497,7 +497,7 @@ export const SchedulesView: React.FC = () => {
                     <option value="">Select Course...</option>
                     {courses.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.code} — {c.title} ({c.classId})
+                        {c.title} {c.amharicTitle ? `(${c.amharicTitle})` : ''} — {c.classId}
                       </option>
                     ))}
                   </select>

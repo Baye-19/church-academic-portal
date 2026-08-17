@@ -230,7 +230,7 @@ export const StudentsView: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-300">
             <thead className="bg-slate-900/80 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-800">
               <tr>
-                <th className="p-4">{t('studentId')}</th>
+                <th className="p-4 w-12 text-center">{t('studentId')}</th>
                 <th className="p-4">{t('studentName')}</th>
                 <th className="p-4">{t('gender')}</th>
                 <th className="p-4">{t('classLevel')}</th>
@@ -248,13 +248,15 @@ export const StudentsView: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedStudents.map((std) => (
+                paginatedStudents.map((std, index) => (
                   <tr
                     key={std.id}
                     className="hover:bg-slate-800/60 transition group cursor-pointer"
                     onClick={() => setSelectedStudentIdForProfile(std.id)}
                   >
-                    <td className="p-4 font-mono font-bold text-emerald-400">{std.studentId}</td>
+                    <td className="p-4 font-mono font-bold text-emerald-400 text-center">
+                      {(currentPage - 1) * PAGE_SIZE + index + 1}
+                    </td>
                     <td className="p-4">
                       <div className="font-semibold text-slate-100 group-hover:text-emerald-300 transition">
                         {std.firstName} {std.lastName}

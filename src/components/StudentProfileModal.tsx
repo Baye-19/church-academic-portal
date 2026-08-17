@@ -551,9 +551,6 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                 <span className="text-sm font-medium text-[#D98218]">
                   {profileData?.student.amharicName}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#F5A623]/15 text-[#F5A623] border border-[#F5A623]/30">
-                  {profileData?.student.studentId}
-                </span>
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
                   {profileData?.student.status || 'ACTIVE'}
                 </span>
@@ -858,8 +855,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                       <table className="w-full text-left text-xs text-[#E8D7C5]">
                         <thead className="bg-[#180B05] text-[#A68F7B] font-bold uppercase tracking-wider border-b border-[#4A2412] text-[10px]">
                           <tr>
-                            <th className="p-3.5">{language === 'am' ? 'የኮርስ ኮድ' : 'Code'}</th>
-                            <th className="p-3.5">{language === 'am' ? 'የኮርስ ስም' : 'Course Title'}</th>
+                            <th className="p-3.5">{language === 'am' ? 'የትምህርት አይነት' : 'Course Title'}</th>
                             <th className="p-3.5 text-center">{language === 'am' ? 'ክሬዲት' : 'Cr.'}</th>
                             <th className="p-3.5 text-center">{language === 'am' ? 'አሳይመንት' : 'Assign'}</th>
                             <th className="p-3.5 text-center">{language === 'am' ? 'ኩዊዝ' : 'Quiz'}</th>
@@ -874,7 +870,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                         <tbody className="divide-y divide-[#3D1E0F]">
                           {filteredMarks.length === 0 ? (
                             <tr>
-                              <td colSpan={11} className="p-8 text-center text-[#A68F7B] italic">
+                              <td colSpan={10} className="p-8 text-center text-[#A68F7B] italic">
                                 {language === 'am'
                                   ? 'በዚህ ሴሚስተር የተመዘገበ የውጤት መረጃ የለም።'
                                   : 'No course grade records found for the selected filter.'}
@@ -883,9 +879,6 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                           ) : (
                             filteredMarks.map((m) => (
                               <tr key={m.id} className="hover:bg-[#351C0F]/60 transition">
-                                <td className="p-3.5 font-mono font-bold text-[#F5A623]">
-                                  {m.courseCode}
-                                </td>
                                 <td className="p-3.5">
                                   <div className="font-semibold text-white">
                                     {m.courseTitle}
